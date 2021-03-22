@@ -13,6 +13,8 @@ Tested using avatar [Canis Woof by Rezillo Ryker](https://www.vrcarena.com/asset
 
 <img src="assets/screenshot_sliders.png" width="300" />
 
+[Watch video](assets/recording_caniswoof.mp4)
+
 ## Usage
 
 1. Copy your VRChat avatar Unity project and open it in Unity 2019
