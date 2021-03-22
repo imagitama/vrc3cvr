@@ -41,12 +41,12 @@ public class VRC_Chillout_Converter : EditorWindow
         EditorGUILayout.Space();
         EditorGUILayout.Space();
 
-        GUILayout.Label("Select your VRChat avatar and click Convert to convert it to ChilloutVR");
+        GUILayout.Label("Select your VRChat avatar and click Convert to convert it to ChilloutVR", EditorStyles.wordWrappedLabel);
 
         EditorGUILayout.Space();
         EditorGUILayout.Space();
 
-        GUILayout.Label("Please ensure you are in a new scene or Unity project to avoid deleting your VRChat components");
+        GUILayout.Label("Please ensure you are in a new scene or Unity project to avoid deleting your VRChat components", EditorStyles.wordWrappedLabel);
 
         EditorGUILayout.Space();
         EditorGUILayout.Space();
@@ -65,6 +65,11 @@ public class VRC_Chillout_Converter : EditorWindow
         {
             Convert();
         }
+
+                EditorGUILayout.Space();
+        EditorGUILayout.Space();
+
+        GUILayout.Label("If using Full Body Tracking remember to set your left and right toes otherwise your avatar might float in the sky", EditorStyles.wordWrappedLabel);
 
         EditorGUILayout.Space();
         EditorGUILayout.Space();
@@ -170,6 +175,66 @@ public class VRC_Chillout_Converter : EditorWindow
         Debug.Log("Vrc components deleted");
     }
 
+    List<int> GetAllIntOptionsForParamFromAnimatorController(string paramName, AnimatorController animatorController) {
+        // TODO: Check special "any state" property
+
+        List<int> results = new List<int>();
+
+        foreach (AnimatorControllerLayer layer in animatorController.layers) {
+            foreach (ChildAnimatorState state in layer.stateMachine.states) {
+                foreach (AnimatorStateTransition transition in state.state.transitions) {
+                    foreach (AnimatorCondition condition in transition.conditions) {
+                        if (condition.parameter == paramName && results.Contains((int)condition.threshold) == false) {
+                            Debug.Log("Adding " + condition.threshold + " as option for param " + paramName);
+                            results.Add((int)condition.threshold);
+                        }
+                    }
+                }
+            }
+        }
+
+        return results;
+    }
+
+    List<int> GetAllIntOptionsForParam(string paramName) {
+        List<int> results = new List<int>();
+
+        Debug.Log("Getting all int options for param \"" + paramName + "\"...");
+
+        for (int i = 0; i < vrcAnimatorControllers.Length; i++)
+        {
+            // if the user has not selected anything
+            if (vrcAnimatorControllers[i] == null)
+            {
+                continue;
+            }
+
+            List<int> newResults = GetAllIntOptionsForParamFromAnimatorController(paramName, vrcAnimatorControllers[i]);
+
+            foreach (int newResult in newResults) {
+                if (results.Contains(newResult) == false) {
+                    results.Add(newResult);
+                }
+            }
+        }
+
+        Debug.Log("Found " + results.Count + " int options: " + string.Join(", ", results.ToArray()));
+
+        return results;
+    }
+
+    List<CVRAdvancedSettingsDropDownEntry> ConvertIntToGameObjectDropdownOptions(List<int> ints) {
+        List<CVRAdvancedSettingsDropDownEntry> entries = new List<CVRAdvancedSettingsDropDownEntry>();
+
+        foreach (int value in ints) {
+            entries.Add(new CVRAdvancedSettingsDropDownEntry() {
+                name = value.ToString()
+            });
+        }
+
+        return entries;
+    }
+
     void ConvertVrcParametersToChillout()
     {
         Debug.Log("Converting vrc parameters to chillout...");
@@ -189,6 +254,19 @@ public class VRC_Chillout_Converter : EditorWindow
             switch (vrcParam.valueType)
             {
                 case VRCExpressionParameters.ValueType.Int:
+                    
+
+                    newParam = new CVRAdvancedSettingsEntry() {
+                        name = vrcParam.name,
+                        machineName = vrcParam.name,
+                        type = CVRAdvancedSettingsEntry.SettingsType.GameObjectDropdown,
+                        setting = new CVRAdvancesAvatarSettingGameObjectDropdown() {
+                            defaultValue = (int)vrcParam.defaultValue,
+                            options = ConvertIntToGameObjectDropdownOptions(GetAllIntOptionsForParam(vrcParam.name))
+                        }
+                    };
+                    break;
+
                 case VRCExpressionParameters.ValueType.Float:
                     newParam = new CVRAdvancedSettingsEntry() {
                         name = vrcParam.name,
@@ -198,13 +276,12 @@ public class VRC_Chillout_Converter : EditorWindow
                             defaultValue = vrcParam.defaultValue
                         }
                     };
-                break;
+                    break;
 
                 case VRCExpressionParameters.ValueType.Bool:
                     newParam = new CVRAdvancedSettingsEntry() {
                         name = vrcParam.name,
                         machineName = vrcParam.name,
-                        // type = CVRAdvancedSettingsEntry.SettingsType.Slider,
                         setting = new CVRAdvancesAvatarSettingGameObjectToggle() {
                             defaultValue = vrcParam.defaultValue != 0 ? true : false
                         }
@@ -312,43 +389,70 @@ public class VRC_Chillout_Converter : EditorWindow
 
                 if (condition.mode == AnimatorConditionMode.Equals)
                 {
-                    // no expression in vrchat
-                    if (condition.threshold == 0)
+                    if (condition.parameter == "GestureLeft" || condition.parameter == "GestureRight")
                     {
-                        AnimatorCondition newConditionNoGesture = new AnimatorCondition();
-                        newConditionNoGesture.parameter = condition.parameter;
-                        newConditionNoGesture.mode = AnimatorConditionMode.Less;
-                        newConditionNoGesture.threshold = (float)-0.9;
+                        // no expression in vrchat
+                        if (condition.threshold == 0)
+                        {
+                            AnimatorCondition newConditionNoGesture = new AnimatorCondition();
+                            newConditionNoGesture.parameter = condition.parameter;
+                            newConditionNoGesture.mode = AnimatorConditionMode.Less;
+                            newConditionNoGesture.threshold = (float)-0.9;
 
-                        conditionsToAdd.Add(newConditionNoGesture);
-                        continue;
+                            conditionsToAdd.Add(newConditionNoGesture);
+                            continue;
+                        }
+
+                        float chilloutGestureNumber = GetChilloutGestureNumberForVrchatGestureNumber(condition.threshold);
+
+                        AnimatorCondition newConditionLessThan = new AnimatorCondition();
+                        newConditionLessThan.parameter = condition.parameter;
+                        newConditionLessThan.mode = AnimatorConditionMode.Less;
+                        newConditionLessThan.threshold = (float)(chilloutGestureNumber + 0.1);
+
+                        conditionsToAdd.Add(newConditionLessThan);
+
+                        AnimatorCondition newConditionGreaterThan = new AnimatorCondition();
+                        newConditionGreaterThan.parameter = condition.parameter;
+                        newConditionGreaterThan.mode = AnimatorConditionMode.Greater;
+                        newConditionGreaterThan.threshold = (float)(chilloutGestureNumber - 0.1);
+
+                        conditionsToAdd.Add(newConditionGreaterThan);
+                    } else {
+                        AnimatorCondition newConditionLessThan = new AnimatorCondition();
+                        newConditionLessThan.parameter = condition.parameter;
+                        newConditionLessThan.mode = AnimatorConditionMode.Less;
+                        newConditionLessThan.threshold = (float)(condition.threshold + 0.1);
+
+                        conditionsToAdd.Add(newConditionLessThan);
+
+                        AnimatorCondition newConditionGreaterThan = new AnimatorCondition();
+                        newConditionGreaterThan.parameter = condition.parameter;
+                        newConditionGreaterThan.mode = AnimatorConditionMode.Greater;
+                        newConditionGreaterThan.threshold = (float)(condition.threshold - 0.1);
+
+                        conditionsToAdd.Add(newConditionGreaterThan);
                     }
-
-                    float chilloutGestureNumber = GetChilloutGestureNumberForVrchatGestureNumber(condition.threshold);
-
-                    AnimatorCondition newConditionLessThan = new AnimatorCondition();
-                    newConditionLessThan.parameter = condition.parameter;
-                    newConditionLessThan.mode = AnimatorConditionMode.Less;
-                    newConditionLessThan.threshold = (float)(chilloutGestureNumber + 0.1);
-
-                    conditionsToAdd.Add(newConditionLessThan);
-
-                    AnimatorCondition newConditionGreaterThan = new AnimatorCondition();
-                    newConditionGreaterThan.parameter = condition.parameter;
-                    newConditionGreaterThan.mode = AnimatorConditionMode.Greater;
-                    newConditionGreaterThan.threshold = (float)(chilloutGestureNumber - 0.1);
-
-                    conditionsToAdd.Add(newConditionGreaterThan);
                 }
                 else if (condition.mode == AnimatorConditionMode.NotEqual) {
-                    float chilloutGestureNumber = GetChilloutGestureNumberForVrchatGestureNumber(condition.threshold);
+                    if (condition.parameter == "GestureLeft" || condition.parameter == "GestureRight")
+                    {
+                        float chilloutGestureNumber = GetChilloutGestureNumberForVrchatGestureNumber(condition.threshold);
 
-                    AnimatorCondition newConditionLessThan = new AnimatorCondition();
-                    newConditionLessThan.parameter = condition.parameter;
-                    newConditionLessThan.mode = AnimatorConditionMode.Less;
-                    newConditionLessThan.threshold = (float)(chilloutGestureNumber - 0.1);
+                        AnimatorCondition newConditionLessThan = new AnimatorCondition();
+                        newConditionLessThan.parameter = condition.parameter;
+                        newConditionLessThan.mode = AnimatorConditionMode.Less;
+                        newConditionLessThan.threshold = (float)(chilloutGestureNumber - 0.1);
 
-                    conditionsToAdd.Add(newConditionLessThan);
+                        conditionsToAdd.Add(newConditionLessThan);
+                    } else {
+                        AnimatorCondition newConditionLessThan = new AnimatorCondition();
+                        newConditionLessThan.parameter = condition.parameter;
+                        newConditionLessThan.mode = AnimatorConditionMode.Less;
+                        newConditionLessThan.threshold = (float)(condition.threshold - 0.1);
+                        
+                        conditionsToAdd.Add(newConditionLessThan);
+                    }
 
                     // TODO: Add transition with another condition for greater than the value
                 }
@@ -673,8 +777,6 @@ public class VRC_Chillout_Converter : EditorWindow
 
         // there is a slight delay before this happens which makes our script not work
         cvrAvatar.avatarSettings = new CVRAdvancedAvatarSettings();
-        // cvrAvatar.avatarSettings.baseController = chilloutAnimatorController;
-        // cvrAvatar.avatarSettings.baseController = AssetDatabase.LoadAssetAtPath<AnimatorController>(AssetDatabase.GUIDToAssetPath(guids[0]));
         cvrAvatar.avatarSettings.settings = new List<CVRAdvancedSettingsEntry>();
         cvrAvatar.avatarSettings.initialized = true;
 
