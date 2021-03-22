@@ -7,7 +7,11 @@ Tested with:
 - ChilloutVR CCK 2.3
 - Unity 2019.4.13f1
 
-Tested using avatar [Canis Woof by Rezillo Ryker](https://www.vrcarena.com/assets/fnADyoq3IE5b4zIZGanA).
+Tested using avatar [Canis Woof by Rezillo Ryker](https://www.vrcarena.com/assets/fnADyoq3IE5b4zIZGanA):
+
+<img src="assets/screenshot_caniswoof_fat.png" width="300" />
+
+<img src="assets/screenshot_sliders.png" width="300" />
 
 ## Usage
 
@@ -32,7 +36,7 @@ Tested using avatar [Canis Woof by Rezillo Ryker](https://www.vrcarena.com/asset
 
 ## Important Notes
 
-VRC has 2 params called `GestureLeftWeight` and `GestureRightWeight` which is the amount of trigger the user is using. In CVR that is the float value of the gesture.
+VRC has 2 float params called `GestureLeftWeight` and `GestureRightWeight` which is the percentage the user is holding down the trigger. CVR instead provides it in the `GestureLeft` and `GestureRight` params where `0.5` would be 50% of the trigger when clenching your fist.
 
 Mapping of VRC gestures to CVR:
 
@@ -49,6 +53,8 @@ Mapping of VRC gestures to CVR:
 
 ## Ideas for future
 
+- support jaw flap blendshape
+- automatically detect jaw/mouth and move voice position
 - use Object Toggle advanced avatar setting for true/false
 - GestureLeftWeight/GestureRightWeight
-- Blendtrees
+- show list of parameters/layers/states/transitions/conditions that might need to be fixed up

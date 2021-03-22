@@ -28,7 +28,6 @@ public class VRC_Chillout_Converter : EditorWindow
     string outputDirName = "VRC_Chillout_Converter_Output";
     bool shouldDeleteVrcComponents = true;
 
-
     [MenuItem("PeanutTools/VRC Chillout Converter _%#T")]
     public static void ShowWindow()
     {
@@ -39,15 +38,43 @@ public class VRC_Chillout_Converter : EditorWindow
 
     void OnGUI()
     {
-        GUILayout.Label("Select your VRChat avatar");
+        EditorGUILayout.Space();
+        EditorGUILayout.Space();
+
+        GUILayout.Label("Select your VRChat avatar and click Convert to convert it to ChilloutVR");
+
+        EditorGUILayout.Space();
+        EditorGUILayout.Space();
+
+        GUILayout.Label("Please ensure you are in a new scene or Unity project to avoid deleting your VRChat components");
+
+        EditorGUILayout.Space();
+        EditorGUILayout.Space();
+
         vrcAvatarDescriptor = (VRCAvatarDescriptor)EditorGUILayout.ObjectField("Avatar", vrcAvatarDescriptor, typeof(VRCAvatarDescriptor));
+        
+        EditorGUILayout.Space();
+        EditorGUILayout.Space();
 
         shouldDeleteVrcComponents = GUILayout.Toggle(shouldDeleteVrcComponents, "Delete VRChat components after");
+
+        EditorGUILayout.Space();
+        EditorGUILayout.Space();
 
         if (GUILayout.Button("Convert") && GetIsReadyForConvert())
         {
             Convert();
         }
+
+        EditorGUILayout.Space();
+        EditorGUILayout.Space();
+        EditorGUILayout.Space();
+        EditorGUILayout.Space();
+
+        GUILayout.Label("https://github.com/imagitama/vrc3sdk");
+        GUILayout.Label("https://twitter.com/@HiPeanutBuddha");
+        GUILayout.Label("Peanut#1756");
+
     }
 
     bool GetIsReadyForConvert()
@@ -161,29 +188,20 @@ public class VRC_Chillout_Converter : EditorWindow
             {
                 name = vrcParam.name,
                 machineName = vrcParam.name,
-                type = CVRAdvancedSettingsEntry.SettingsType.InputSingle,
-                setting = new CVRAdvancesAvatarSettingInputSingle()
+                type = CVRAdvancedSettingsEntry.SettingsType.Slider,
+                setting = new CVRAdvancesAvatarSettingSlider()
             };
-
-            // TODO: Investigate why this is always null
-            // if (newParam.setting == null)
-            // {
-            //     // throw new Exception("CVR setting does not have a settings property");
-
-            //     newParams.Add(newParam);
-            //     continue;
-            // }
 
             switch (vrcParam.valueType)
             {
                 case VRCExpressionParameters.ValueType.Int:
-                    ((CVRAdvancesAvatarSettingInputSingle)newParam.setting).defaultValue = vrcParam.defaultValue;
+                    ((CVRAdvancesAvatarSettingSlider)newParam.setting).defaultValue = vrcParam.defaultValue;
                     break;
                 case VRCExpressionParameters.ValueType.Float:
-                    ((CVRAdvancesAvatarSettingInputSingle)newParam.setting).defaultValue = vrcParam.defaultValue;
+                    ((CVRAdvancesAvatarSettingSlider)newParam.setting).defaultValue = vrcParam.defaultValue;
                     break;
                 case VRCExpressionParameters.ValueType.Bool:
-                    ((CVRAdvancesAvatarSettingInputSingle)newParam.setting).defaultValue = vrcParam.defaultValue != 0 ? 1 : 0;
+                    ((CVRAdvancesAvatarSettingSlider)newParam.setting).defaultValue = vrcParam.defaultValue != 0 ? 1 : 0;
                     break;
                 default:
                     throw new Exception("Cannot convert vrc parameter to chillout: unknown type \"" + vrcParam.valueType + "\"");
@@ -196,31 +214,6 @@ public class VRC_Chillout_Converter : EditorWindow
 
         Debug.Log("Finished converting vrc params");
     }
-
-    void SetHandGesturesToType(AnimatorControllerParameterType newType)
-    {
-        AnimatorControllerParameter[] newParams = chilloutAnimatorController.parameters;
-
-        for (int i = 0; i < newParams.Length; i++)
-        {
-            if (newParams[i].name == "GestureLeft" || newParams[i].name == "GestureRight")
-            {
-                newParams[i].type = newType;
-            }
-        }
-
-        chilloutAnimatorController.parameters = newParams;
-    }
-
-    void SetHandGesturesToInt()
-    {
-        SetHandGesturesToType(AnimatorControllerParameterType.Int);
-    }
-
-    // void SetHandGesturesToFloat()
-    // {
-    //     SetHandGesturesToType(AnimatorControllerParameterType.Float);
-    // }
 
     void MergeVrcAnimatorsIntoChilloutAnimator()
     {
@@ -309,7 +302,7 @@ public class VRC_Chillout_Converter : EditorWindow
 
                 Debug.Log("CHECK " + condition.parameter + " " + condition.mode + " " + condition.threshold);
 
-                if (condition.mode == AnimatorConditionMode.Equals || condition.mode == AnimatorConditionMode.NotEqual)
+                if (condition.mode == AnimatorConditionMode.Equals)
                 {
                     // no expression in vrchat
                     if (condition.threshold == 0)
@@ -338,6 +331,18 @@ public class VRC_Chillout_Converter : EditorWindow
                     newConditionGreaterThan.threshold = (float)(chilloutGestureNumber - 0.1);
 
                     conditionsToAdd.Add(newConditionGreaterThan);
+                }
+                else if (condition.mode == AnimatorConditionMode.NotEqual) {
+                    float chilloutGestureNumber = GetChilloutGestureNumberForVrchatGestureNumber(condition.threshold);
+
+                    AnimatorCondition newConditionLessThan = new AnimatorCondition();
+                    newConditionLessThan.parameter = condition.parameter;
+                    newConditionLessThan.mode = AnimatorConditionMode.Less;
+                    newConditionLessThan.threshold = (float)(chilloutGestureNumber - 0.1);
+
+                    conditionsToAdd.Add(newConditionLessThan);
+
+                    // TODO: Add transition with another condition for greater than the value
                 }
                 else if (condition.mode == AnimatorConditionMode.If)
                 {
@@ -448,8 +453,6 @@ public class VRC_Chillout_Converter : EditorWindow
         // we modify everything in place so we don't want to mutate the original
         AnimatorController animatorToMerge = CopyVrcAnimatorForMerge(originalAnimatorController);
 
-        // SetHandGesturesToInt();
-
         AnimatorControllerParameter[] existingParams = chilloutAnimatorController.parameters;
         AnimatorControllerParameter[] newParams = animatorToMerge.parameters;
 
@@ -466,6 +469,9 @@ public class VRC_Chillout_Converter : EditorWindow
         AnimatorControllerLayer[] layersToMerge = animatorToMerge.layers;
 
         Debug.Log("Found " + layersToMerge.Length + " layers to merge");
+
+        // CVR breaks if any layer names are the same
+        layersToMerge = FixDuplicateLayerNames(layersToMerge, existingLayers);
 
         AnimatorControllerLayer[] newLayers = new AnimatorControllerLayer[existingLayers.Length + layersToMerge.Length];
 
@@ -491,11 +497,25 @@ public class VRC_Chillout_Converter : EditorWindow
 
         chilloutAnimatorController.layers = newLayers;
 
-        // SetHandGesturesToFloat();
-
         // PurgeAnimator(animatorToMerge);
 
         Debug.Log("Merged");
+    }
+
+    AnimatorControllerLayer[] FixDuplicateLayerNames(AnimatorControllerLayer[] newLayers, AnimatorControllerLayer[] existingLayers) {
+        foreach (AnimatorControllerLayer newLayer in newLayers) {
+            foreach (AnimatorControllerLayer existingLayer in existingLayers) {
+                if (existingLayer.name == newLayer.name) {
+                    Debug.Log("Layer \"" + newLayer.name + \" clashes with an existing layer, renaming...");
+
+                    // TODO: This is fragile cause they could have another layer with the same name
+                    // Maybe check again if it exists whenever we rename it
+                    newLayer.name = newLayer.name + "_1";
+                }
+            }
+        }
+
+        return newLayers;
     }
 
     void CreateEmptyChilloutAnimator()
