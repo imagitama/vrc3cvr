@@ -1,3 +1,7 @@
+# 0.0.3
+
+- use toggles (Game Object Toggles) for boolean params
+
 # 0.0.2
 
 - fix animator controller not working because of duplicate layer names
