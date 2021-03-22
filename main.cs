@@ -506,7 +506,7 @@ public class VRC_Chillout_Converter : EditorWindow
         foreach (AnimatorControllerLayer newLayer in newLayers) {
             foreach (AnimatorControllerLayer existingLayer in existingLayers) {
                 if (existingLayer.name == newLayer.name) {
-                    Debug.Log("Layer \"" + newLayer.name + \" clashes with an existing layer, renaming...");
+                    Debug.Log("Layer \"" + newLayer.name + "\" clashes with an existing layer, renaming...");
 
                     // TODO: This is fragile cause they could have another layer with the same name
                     // Maybe check again if it exists whenever we rename it
