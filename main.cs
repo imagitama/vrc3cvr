@@ -76,7 +76,7 @@ public class VRC_Chillout_Converter : EditorWindow
         EditorGUILayout.Space();
         EditorGUILayout.Space();
 
-        GUILayout.Label("https://github.com/imagitama/vrc3sdk");
+        GUILayout.Label("https://github.com/imagitama/vrc3cvr");
         GUILayout.Label("https://twitter.com/@HiPeanutBuddha");
         GUILayout.Label("Peanut#1756");
 
@@ -249,22 +249,24 @@ public class VRC_Chillout_Converter : EditorWindow
 
             Debug.Log("Param \"" + vrcParam.name + "\" type \"" + vrcParam.valueType + "\" default \"" + vrcParam.defaultValue + "\"");
 
-            CVRAdvancedSettingsEntry newParam;
+            CVRAdvancedSettingsEntry newParam = null;
 
             switch (vrcParam.valueType)
             {
                 case VRCExpressionParameters.ValueType.Int:
-                    
+                    List<CVRAdvancedSettingsDropDownEntry> dropdownOptions = ConvertIntToGameObjectDropdownOptions(GetAllIntOptionsForParam(vrcParam.name));
 
-                    newParam = new CVRAdvancedSettingsEntry() {
-                        name = vrcParam.name,
-                        machineName = vrcParam.name,
-                        type = CVRAdvancedSettingsEntry.SettingsType.GameObjectDropdown,
-                        setting = new CVRAdvancesAvatarSettingGameObjectDropdown() {
-                            defaultValue = (int)vrcParam.defaultValue,
-                            options = ConvertIntToGameObjectDropdownOptions(GetAllIntOptionsForParam(vrcParam.name))
-                        }
-                    };
+                    if (dropdownOptions.Count > 0) {
+                        newParam = new CVRAdvancedSettingsEntry() {
+                            name = vrcParam.name,
+                            machineName = vrcParam.name,
+                            type = CVRAdvancedSettingsEntry.SettingsType.GameObjectDropdown,
+                            setting = new CVRAdvancesAvatarSettingGameObjectDropdown() {
+                                defaultValue = (int)vrcParam.defaultValue,
+                                options = dropdownOptions
+                            }
+                        };
+                    }
                     break;
 
                 case VRCExpressionParameters.ValueType.Float:
@@ -292,7 +294,9 @@ public class VRC_Chillout_Converter : EditorWindow
                     throw new Exception("Cannot convert vrc parameter to chillout: unknown type \"" + vrcParam.valueType + "\"");
             }
 
-            newParams.Add(newParam);
+            if (newParam != null) {
+                newParams.Add(newParam);
+            }
         }
 
         cvrAvatar.avatarSettings.settings = newParams;

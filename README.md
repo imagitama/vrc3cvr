@@ -32,7 +32,9 @@ Tested using avatar [Canis Woof by Rezillo Ryker](https://www.vrcarena.com/asset
 - sets the blink blendshapes
 - sets the viewpoint and voice position to the VRChat avatar viewpoint
 - adds an advanced avatar setting for each VRChat parameter
-  - using Sliders for each parameter (for booleans 50%-100% is true)
+  - sliders for all float params
+  - toggle for all boolean params
+  - dropdown for all int params
 - converts each animator controller (gestures, FX, etc.) to support ChilloutVR's gesture system
   - ChilloutVR only supports float parameters so booleans and ints have been converted
 

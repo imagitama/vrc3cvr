@@ -1,3 +1,11 @@
+# 0.0.5
+
+- do not render dropdown if no conditions use the int VRC param
+
+# 0.0.4
+
+- dropdowns for int VRC params
+
 # 0.0.3
 
 - use toggles (Game Object Toggles) for boolean params
