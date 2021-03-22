@@ -184,25 +184,33 @@ public class VRC_Chillout_Converter : EditorWindow
 
             Debug.Log("Param \"" + vrcParam.name + "\" type \"" + vrcParam.valueType + "\" default \"" + vrcParam.defaultValue + "\"");
 
-            CVRAdvancedSettingsEntry newParam = new CVRAdvancedSettingsEntry()
-            {
-                name = vrcParam.name,
-                machineName = vrcParam.name,
-                type = CVRAdvancedSettingsEntry.SettingsType.Slider,
-                setting = new CVRAdvancesAvatarSettingSlider()
-            };
+            CVRAdvancedSettingsEntry newParam;
 
             switch (vrcParam.valueType)
             {
                 case VRCExpressionParameters.ValueType.Int:
-                    ((CVRAdvancesAvatarSettingSlider)newParam.setting).defaultValue = vrcParam.defaultValue;
-                    break;
                 case VRCExpressionParameters.ValueType.Float:
-                    ((CVRAdvancesAvatarSettingSlider)newParam.setting).defaultValue = vrcParam.defaultValue;
-                    break;
+                    newParam = new CVRAdvancedSettingsEntry() {
+                        name = vrcParam.name,
+                        machineName = vrcParam.name,
+                        type = CVRAdvancedSettingsEntry.SettingsType.Slider,
+                        setting = new CVRAdvancesAvatarSettingSlider() {
+                            defaultValue = vrcParam.defaultValue
+                        }
+                    };
+                break;
+
                 case VRCExpressionParameters.ValueType.Bool:
-                    ((CVRAdvancesAvatarSettingSlider)newParam.setting).defaultValue = vrcParam.defaultValue != 0 ? 1 : 0;
+                    newParam = new CVRAdvancedSettingsEntry() {
+                        name = vrcParam.name,
+                        machineName = vrcParam.name,
+                        // type = CVRAdvancedSettingsEntry.SettingsType.Slider,
+                        setting = new CVRAdvancesAvatarSettingGameObjectToggle() {
+                            defaultValue = vrcParam.defaultValue != 0 ? true : false
+                        }
+                    };
                     break;
+
                 default:
                     throw new Exception("Cannot convert vrc parameter to chillout: unknown type \"" + vrcParam.valueType + "\"");
             }
