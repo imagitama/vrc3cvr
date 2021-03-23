@@ -34,7 +34,7 @@ Tested using avatar [Canis Woof by Rezillo Ryker](https://www.vrcarena.com/asset
 - adds an advanced avatar setting for each VRChat parameter
   - sliders for all float params
   - toggle for all boolean params
-  - dropdown for all int params
+  - dropdown for all int params (toggle if only 1 int found)
 - converts each animator controller (gestures, FX, etc.) to support ChilloutVR's gesture system
   - ChilloutVR only supports float parameters so booleans and ints have been converted
 

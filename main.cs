@@ -266,7 +266,7 @@ public class VRC_Chillout_Converter : EditorWindow
                 case VRCExpressionParameters.ValueType.Int:
                     List<CVRAdvancedSettingsDropDownEntry> dropdownOptions = ConvertIntToGameObjectDropdownOptions(GetAllIntOptionsForParam(vrcParam.name));
 
-                    if (dropdownOptions.Count > 0) {
+                    if (dropdownOptions.Count > 1) {
                         newParam = new CVRAdvancedSettingsEntry() {
                             name = vrcParam.name,
                             machineName = vrcParam.name,
@@ -274,6 +274,16 @@ public class VRC_Chillout_Converter : EditorWindow
                             setting = new CVRAdvancesAvatarSettingGameObjectDropdown() {
                                 defaultValue = (int)vrcParam.defaultValue,
                                 options = dropdownOptions
+                            }
+                        };
+                    } else {
+                        Debug.Log("Param only has 1 option so we are making a toggle instead");
+
+                        newParam = new CVRAdvancedSettingsEntry() {
+                            name = vrcParam.name,
+                            machineName = vrcParam.name,
+                            setting = new CVRAdvancesAvatarSettingGameObjectToggle() {
+                                defaultValue = vrcParam.defaultValue == 1 ? true : false
                             }
                         };
                     }

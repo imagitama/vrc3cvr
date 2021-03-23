@@ -1,3 +1,7 @@
+# 0.0.8
+
+- show a toggle instead of a dropdown if only 1 dropdown item
+
 # 0.0.7
 
 - fixed resting gesture showing open-hand/surprised gesture
