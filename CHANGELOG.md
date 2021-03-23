@@ -1,3 +1,7 @@
+# 0.0.7
+
+- fixed resting gesture showing open-hand/surprised gesture
+
 # 0.0.6
 
 - fixed `NotEqual` int conditions not properly converting to floats

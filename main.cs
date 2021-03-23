@@ -66,7 +66,7 @@ public class VRC_Chillout_Converter : EditorWindow
             Convert();
         }
 
-                EditorGUILayout.Space();
+        EditorGUILayout.Space();
         EditorGUILayout.Space();
 
         GUILayout.Label("If using Full Body Tracking remember to set your left and right toes otherwise your avatar might float in the sky", EditorStyles.wordWrappedLabel);
@@ -76,10 +76,18 @@ public class VRC_Chillout_Converter : EditorWindow
         EditorGUILayout.Space();
         EditorGUILayout.Space();
 
-        GUILayout.Label("https://github.com/imagitama/vrc3cvr");
+        GUILayout.Label("Join my Discord: https://discord.gg/sm6EBWJH6B");
+
+        EditorGUILayout.Space();
+        EditorGUILayout.Space();
+
+        GUILayout.Label("Download new versions: https://github.com/imagitama/vrc3cvr");
+
+        EditorGUILayout.Space();
+        EditorGUILayout.Space();
+
         GUILayout.Label("https://twitter.com/@HiPeanutBuddha");
         GUILayout.Label("Peanut#1756");
-
     }
 
     bool GetIsReadyForConvert()
@@ -328,12 +336,15 @@ public class VRC_Chillout_Converter : EditorWindow
     {
         switch (vrchatGestureNumber)
         {
+            // no gesture
+            case 0:
+                return 0;
             // fist
             case 1:
                 return 1;
             // open hand
             case 2:
-                return 0;
+                return -1;
             // point
             case 3:
                 return 4;
@@ -404,19 +415,6 @@ public class VRC_Chillout_Converter : EditorWindow
                 {
                     if (condition.parameter == "GestureLeft" || condition.parameter == "GestureRight")
                     {
-                        // no expression in vrchat
-                        if (condition.threshold == 0)
-                        {
-                            // TODO: Instantiate object and populate variables at construction
-                            AnimatorCondition newConditionNoGesture = new AnimatorCondition();
-                            newConditionNoGesture.parameter = condition.parameter;
-                            newConditionNoGesture.mode = AnimatorConditionMode.Less;
-                            newConditionNoGesture.threshold = (float)-0.9;
-
-                            conditionsToAdd.Add(newConditionNoGesture);
-                            continue;
-                        }
-
                         float chilloutGestureNumber = GetChilloutGestureNumberForVrchatGestureNumber(condition.threshold);
 
                         AnimatorCondition newConditionLessThan = new AnimatorCondition();

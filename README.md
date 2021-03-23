@@ -46,14 +46,14 @@ Mapping of VRC gestures to CVR:
 
 | Gesture | VRC | CVR |
 | --- | --- | --- | 
-| Nothing | 0 | ? |
+| Nothing | 0 | 0 |
 | Fist | 1 | 1 |
-| Open Hand | 2 | 0 |
+| Open Hand | 2 | -1 |
 | Point | 3 | 4 |
 | Peace | 4 | 5 |
 | Rock'n'Roll | 5 | 6 |
 | Gun | 6 | 3 |
-| Thumbs Up | 7 | ? |
+| Thumbs Up | 7 | 2 |
 
 ## Avatar-specific notes
 
