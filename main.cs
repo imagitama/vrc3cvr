@@ -27,6 +27,7 @@ public class VRC_Chillout_Converter : EditorWindow
     AnimatorController[] vrcAnimatorControllers;
     string outputDirName = "VRC_Chillout_Converter_Output";
     bool shouldDeleteVrcComponents = true;
+    bool shouldDeleteCvrHandLayers = true;
 
     [MenuItem("PeanutTools/VRC Chillout Converter _%#T")]
     public static void ShowWindow()
@@ -57,6 +58,11 @@ public class VRC_Chillout_Converter : EditorWindow
         EditorGUILayout.Space();
 
         shouldDeleteVrcComponents = GUILayout.Toggle(shouldDeleteVrcComponents, "Delete VRChat components after");
+
+        EditorGUILayout.Space();
+        EditorGUILayout.Space();
+
+        shouldDeleteCvrHandLayers = GUILayout.Toggle(shouldDeleteCvrHandLayers, "My avatar has custom hand animations");
 
         EditorGUILayout.Space();
         EditorGUILayout.Space();
@@ -391,7 +397,7 @@ public class VRC_Chillout_Converter : EditorWindow
                 }
             }
 
-                            Debug.Log("WITHOUT DUPE: " + newParams[x].name + " yes? " + (doesAlreadyExist == true ? "EXISTS" : " NO EXISTS"));
+            //  Debug.Log("WITHOUT DUPE: " + newParams[x].name + " yes? " + (doesAlreadyExist == true ? "EXISTS" : " NO EXISTS"));
 
             if (doesAlreadyExist == false)
             {
@@ -666,8 +672,6 @@ public class VRC_Chillout_Converter : EditorWindow
 
         chilloutAnimatorController.layers = newLayers;
 
-        // PurgeAnimator(animatorToMerge);
-
         Debug.Log("Merged");
     }
 
@@ -729,9 +733,25 @@ public class VRC_Chillout_Converter : EditorWindow
             throw new Exception("Animator controller has unexpected number of layers: " + chilloutAnimatorController.layers.Length);
         }
 
-        AnimatorControllerLayer[] newLayers = new AnimatorControllerLayer[] { chilloutAnimatorController.layers[0] };
+        List<AnimatorControllerLayer> newLayers = new List<AnimatorControllerLayer>();
 
-        chilloutAnimatorController.layers = newLayers;
+        string[] allowedLayerNames;
+            
+        if (shouldDeleteCvrHandLayers) {
+            Debug.Log("Deleting CVR hand layers...");
+            allowedLayerNames = new string[] { "Locomotion/Emotes" };
+        } else {
+            Debug.Log("Not deleting CVR hand layers...");
+            allowedLayerNames = new string[] { "Locomotion/Emotes", "LeftHand", "RightHand" };
+        }
+
+        foreach (AnimatorControllerLayer layer in chilloutAnimatorController.layers) {
+            if (Array.IndexOf(allowedLayerNames, layer.name) != -1) {
+                newLayers.Add(layer);
+            }
+        }
+
+        chilloutAnimatorController.layers = newLayers.ToArray();
 
         Debug.Log("Setting animator...");
 

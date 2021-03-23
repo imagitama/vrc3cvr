@@ -1,3 +1,7 @@
+# 0.0.9
+
+- added checkbox to decide if to delete the `LeftHand` and `RightHand` layers provided by CVR
+
 # 0.0.8
 
 - show a toggle instead of a dropdown if only 1 dropdown item
