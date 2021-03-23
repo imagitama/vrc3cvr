@@ -226,6 +226,8 @@ public class VRC_Chillout_Converter : EditorWindow
     List<CVRAdvancedSettingsDropDownEntry> ConvertIntToGameObjectDropdownOptions(List<int> ints) {
         List<CVRAdvancedSettingsDropDownEntry> entries = new List<CVRAdvancedSettingsDropDownEntry>();
 
+        ints.Sort();
+
         foreach (int value in ints) {
             entries.Add(new CVRAdvancedSettingsDropDownEntry() {
                 name = value.ToString()
@@ -368,17 +370,23 @@ public class VRC_Chillout_Converter : EditorWindow
                 }
             }
 
+                            Debug.Log("WITHOUT DUPE: " + newParams[x].name + " yes? " + (doesAlreadyExist == true ? "EXISTS" : " NO EXISTS"));
+
             if (doesAlreadyExist == false)
             {
                 finalParams.Add(newParams[x]);
             }
         }
 
+
+
         return finalParams.ToArray();
     }
 
-    void ProcessTransitions(AnimatorStateTransition[] transitions)
+    AnimatorStateTransition[] ProcessTransitions(AnimatorStateTransition[] transitions)
     {
+        List<AnimatorStateTransition> transitionsToAdd = new List<AnimatorStateTransition>();
+
         for (int t = 0; t < transitions.Length; t++)
         {
             List<AnimatorCondition> conditionsToAdd = new List<AnimatorCondition>();
@@ -389,8 +397,9 @@ public class VRC_Chillout_Converter : EditorWindow
             {
                 AnimatorCondition condition = transitions[t].conditions[c];
 
-                Debug.Log("CHECK " + condition.parameter + " " + condition.mode + " " + condition.threshold);
+                // Debug.Log("CHECK " + condition.parameter + " " + condition.mode + " " + condition.threshold);
 
+                // TODO: Use switch
                 if (condition.mode == AnimatorConditionMode.Equals)
                 {
                     if (condition.parameter == "GestureLeft" || condition.parameter == "GestureRight")
@@ -398,6 +407,7 @@ public class VRC_Chillout_Converter : EditorWindow
                         // no expression in vrchat
                         if (condition.threshold == 0)
                         {
+                            // TODO: Instantiate object and populate variables at construction
                             AnimatorCondition newConditionNoGesture = new AnimatorCondition();
                             newConditionNoGesture.parameter = condition.parameter;
                             newConditionNoGesture.mode = AnimatorConditionMode.Less;
@@ -456,9 +466,18 @@ public class VRC_Chillout_Converter : EditorWindow
                         newConditionLessThan.threshold = (float)(condition.threshold - 0.1);
                         
                         conditionsToAdd.Add(newConditionLessThan);
-                    }
 
-                    // TODO: Add transition with another condition for greater than the value
+                        AnimatorStateTransition newTransition = AnimatorStateTransition.Instantiate(transitions[t]);
+                        newTransition.conditions = new AnimatorCondition[] {
+                            new AnimatorCondition() {
+                                parameter = condition.parameter,
+                                mode = AnimatorConditionMode.Greater,
+                                threshold = (float)(condition.threshold + 0.1)
+                            }
+                        };
+
+                        transitionsToAdd.Add(newTransition);
+                    }
                 }
                 else if (condition.mode == AnimatorConditionMode.If)
                 {
@@ -491,11 +510,36 @@ public class VRC_Chillout_Converter : EditorWindow
                     newConditionGreaterThan.threshold = (float)-0.1;
 
                     conditionsToAdd.Add(newConditionGreaterThan);
+                } 
+                else if (condition.mode == AnimatorConditionMode.Greater)
+                {
+                    AnimatorCondition newCondition = new AnimatorCondition();
+                    newCondition.parameter = condition.parameter;
+                    newCondition.mode = AnimatorConditionMode.Greater;
+                    newCondition.threshold = condition.threshold;
+
+                    conditionsToAdd.Add(newCondition);
+                } 
+                else if (condition.mode == AnimatorConditionMode.Less)
+                {
+                    AnimatorCondition newCondition = new AnimatorCondition();
+                    newCondition.parameter = condition.parameter;
+                    newCondition.mode = AnimatorConditionMode.Less;
+                    newCondition.threshold = condition.threshold;
+
+                    conditionsToAdd.Add(newCondition);
                 }
             }
 
             transitions[t].conditions = conditionsToAdd.ToArray();
         }
+
+        AnimatorStateTransition[] newTransitions = new AnimatorStateTransition[transitions.Length + transitionsToAdd.Count];
+
+        transitions.CopyTo(newTransitions, 0);
+        transitionsToAdd.ToArray().CopyTo(newTransitions, transitions.Length);
+
+        return newTransitions;
     }
 
     void ProcessStateMachine(AnimatorStateMachine stateMachine)
@@ -504,7 +548,8 @@ public class VRC_Chillout_Converter : EditorWindow
         {
             // Debug.Log(stateMachine.states[s].state.transitions.Length + " transitions");
 
-            ProcessTransitions(stateMachine.states[s].state.transitions);
+            AnimatorStateTransition[] newTransitions = ProcessTransitions(stateMachine.states[s].state.transitions);
+            stateMachine.states[s].state.transitions = newTransitions;
         }
 
         ProcessTransitions(stateMachine.anyStateTransitions);

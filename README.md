@@ -55,6 +55,13 @@ Mapping of VRC gestures to CVR:
 | Gun | 6 | 3 |
 | Thumbs Up | 7 | ? |
 
+## Avatar-specific notes
+
+### Awtter
+
+- you must add a missing parameter to the `Actions` controller named `AFK` (`boolean`)
+- remove the default animation in state `WaitForActionOrAFK` in `Actions` controller and enable "Write Defaults"
+
 ## Ideas for future
 
 - support jaw flap blendshape

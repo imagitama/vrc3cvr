@@ -1,3 +1,7 @@
+# 0.0.6
+
+- fixed `NotEqual` int conditions not properly converting to floats
+
 # 0.0.5
 
 - do not render dropdown if no conditions use the int VRC param
