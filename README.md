@@ -1,5 +1,3 @@
-# VRC Chillout Converter
-
 Convert a VRChat SDK3 avatar to ChilloutVR with this Unity script.
 
 Tested with:
@@ -16,6 +14,8 @@ Tested using avatar [Canis Woof by Rezillo Ryker](https://www.vrcarena.com/asset
 [Watch video](assets/recording_caniswoof.mp4?raw=true)
 
 ## Usage
+
+Go to [Releases](https://github.com/imagitama/vrc3cvr/releases/latest) and expand "Assets" and download the `.unitypackage`.
 
 1. Copy your VRChat avatar Unity project and open it in Unity 2019
 2. Install the ChilloutVR CCK (FAQ channel in their [Discord](https://discord.gg/ABI))
