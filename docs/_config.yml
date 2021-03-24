@@ -4,3 +4,7 @@ tagline: A Unity tool that converts your VRChat SDK3 avatar to ChilloutVR.
 description: To help you transition from VRChat to ChilloutVR you can use this tool that converts the VRChat Unity components to ChilloutVR.
 include:
 - ../README.md
+defaults:
+  - 
+    scope:
+      path: "README.md"
