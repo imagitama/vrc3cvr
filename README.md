@@ -63,9 +63,11 @@ VRC has two parameters `GestureLeftWeight` and `GestureRightWeight`. They do not
 These avatars have been tested and verified to work in ChilloutVR using the tool. Some have notes for manual steps.
 
 - [x] Canis Woof (Rezillo Ryker)
+- [x] Rexouium (Rezillo Ryker)
+  - manual step: add missing parameters `ToeMoveH` and `ToeMoveV`
 - [x] Awtter (Shade the Bat)
-  - manual step: add a missing parameter to the `Actions` controller named `AFK` (`boolean`)
-  - fix locomotion: remove the default animation in state `WaitForActionOrAFK` in `Actions` controller and enable "Write Defaults"
+  - manual step: add missing parameter `AFK`
+  - fix locomotion: remove the motion in state `WaitForActionOrAFK` in `Actions` controller and enable "Write Defaults"
 - [x] Shiba Inu (Alucard/Pikapetey)
 - [x] Wickerbeast (Jin A)
 
