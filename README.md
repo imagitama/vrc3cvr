@@ -7,9 +7,9 @@ Tested with:
 
 Tested using avatar [Canis Woof by Rezillo Ryker](https://www.vrcarena.com/assets/fnADyoq3IE5b4zIZGanA):
 
-<img src="assets/screenshot_caniswoof_fat.png" width="300" />
+<img src="assets/screenshot_caniswoof_fat.png" />
 
-<img src="assets/screenshot_sliders.png" width="300" />
+<img src="assets/screenshot_sliders.png" />
 
 [Watch video](assets/recording_caniswoof.mp4?raw=true)
 
