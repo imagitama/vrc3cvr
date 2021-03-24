@@ -58,12 +58,18 @@ Mapping of VRC gestures to CVR:
 
 VRC has two parameters `GestureLeftWeight` and `GestureRightWeight`. They do not exist in CVR and instead check `GestureLeft` amount where 0.5 is 50% of the trigger for the fist animation.
 
-## Avatar-specific notes
+## Avatar compatibility
 
-### Awtter
+These avatars have been tested and verified to work in ChilloutVR using the tool. Some have notes for manual steps.
 
-- you must add a missing parameter to the `Actions` controller named `AFK` (`boolean`)
-- remove the default animation in state `WaitForActionOrAFK` in `Actions` controller and enable "Write Defaults"
+- [x] Canis Woof (Rezillo Ryker)
+- [x] Awtter (Shade the Bat)
+  - manual step: add a missing parameter to the `Actions` controller named `AFK` (`boolean`)
+  - fix locomotion: remove the default animation in state `WaitForActionOrAFK` in `Actions` controller and enable "Write Defaults"
+- [x] Shiba Inu (Alucard/Pikapetey)
+- [x] Wickerbeast (Jin A)
+
+Please message via the Discord if you have used the tool on your avatar.
 
 ## Ideas for future
 
