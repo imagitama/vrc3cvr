@@ -66,6 +66,14 @@ Mapping of VRC gestures to CVR:
 
 - support jaw flap blendshape
 - automatically detect jaw/mouth and move voice position
-- use Object Toggle advanced avatar setting for true/false
 - GestureLeftWeight/GestureRightWeight
-- show list of parameters/layers/states/transitions/conditions that might need to be fixed up
+
+## Troubleshooting
+
+### "VRCExpressionParameters.Parameter does not contain a definition for defaultValue" or another VRChat error
+
+Update to a more recent version. Tested with VRChat Avatar SDK3 2021.02.23.
+
+### When performing a gesture my hands do not animate
+
+Uncheck "My avatar has custom hand animations" and convert.

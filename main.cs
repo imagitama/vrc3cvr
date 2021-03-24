@@ -16,6 +16,7 @@ using ABI.CCK.Scripts.Editor;
 
 public class VRC_Chillout_Converter : EditorWindow
 {
+    Animator animator;
     bool isConverting = false;
     VRCAvatarDescriptor vrcAvatarDescriptor;
     CVRAvatar cvrAvatar;
@@ -75,7 +76,17 @@ public class VRC_Chillout_Converter : EditorWindow
         EditorGUILayout.Space();
         EditorGUILayout.Space();
 
-        GUILayout.Label("If using Full Body Tracking remember to set your left and right toes otherwise your avatar might float in the sky", EditorStyles.wordWrappedLabel);
+        GUILayout.Label("VRChat does not require your imported rig to have toe bones but CVR does. Are yours set:", EditorStyles.wordWrappedLabel);
+
+        if (animator == null) {
+            GUILayout.Label("Perform conversion to check");
+        } else {
+            Transform leftToesTransform = animator.GetBoneTransform(HumanBodyBones.LeftToes);
+            Transform righToesTransform = animator.GetBoneTransform(HumanBodyBones.RightToes);
+
+            GUILayout.Label("Left: " + (leftToesTransform == null ? "NOT SET" : "Set"));
+            GUILayout.Label("Right: " + (righToesTransform == null ? "NOT SET" : "Set"));
+        }
 
         EditorGUILayout.Space();
         EditorGUILayout.Space();
@@ -96,9 +107,20 @@ public class VRC_Chillout_Converter : EditorWindow
         GUILayout.Label("Peanut#1756");
     }
 
+    bool GetAreToeBonesSet() {
+        return true;
+    }
+
     bool GetIsReadyForConvert()
     {
         return vrcAvatarDescriptor != null;
+    }
+
+    void SetAnimator() {
+        // this is not necessary for VRC or CVR but it helps people test their controller
+        // and lets us query for Toe bones for our GUI
+        animator = vrcAvatarDescriptor.gameObject.GetComponent<Animator>();
+        animator.runtimeAnimatorController = chilloutAnimatorController;
     }
 
     void Convert()
@@ -117,8 +139,8 @@ public class VRC_Chillout_Converter : EditorWindow
         PopulateChilloutComponent();
         CreateEmptyChilloutAnimator();
         MergeVrcAnimatorsIntoChilloutAnimator();
+        SetAnimator();
         ConvertVrcParametersToChillout();
-        // BuildChilloutAnimatorWithParams();
         InsertChilloutOverride();
 
         if (shouldDeleteVrcComponents)

@@ -1,3 +1,7 @@
+# 0.0.10
+
+- output if the left or right toe bones are not set
+
 # 0.0.9
 
 - added checkbox to decide if to delete the `LeftHand` and `RightHand` layers provided by CVR
