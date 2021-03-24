@@ -1,10 +1,10 @@
 .download-btn {
     height: 20px;
     line-height: 1;
-    margin: 20px 0;
+    margin-bottom: 20px;
     background: #4d0000;
     padding: 20px 30px;
-    color: #000;
+    color: #FFF;
     border-radius: 100px;
     transition: all 100ms;
     display: inline-block;
@@ -12,6 +12,7 @@
 }
 
 .download-btn:hover {
-    color: inherit;
+    color: #FFF;
+    text-decoration: none;
     transform: scale(1.1);
 }
