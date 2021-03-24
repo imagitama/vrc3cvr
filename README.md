@@ -37,10 +37,9 @@ Go to [Releases](https://github.com/imagitama/vrc3cvr/releases/latest) and expan
   - dropdown for all int params (toggle if only 1 int found)
 - converts each animator controller (gestures, FX, etc.) to support ChilloutVR's gesture system
   - ChilloutVR only supports float parameters so booleans and ints have been converted
+  - references to `GestureLeftWeight`/`GestureRightWeight` are converted to `GestureLeft`/`GestureRight` (check your Fist animation!)
 
-## Important Notes
-
-VRC has 2 float params called `GestureLeftWeight` and `GestureRightWeight` which is the percentage the user is holding down the trigger. CVR instead provides it in the `GestureLeft` and `GestureRight` params where `0.5` would be 50% of the trigger when clenching your fist.
+## Mapping gestures
 
 Mapping of VRC gestures to CVR:
 
@@ -54,6 +53,10 @@ Mapping of VRC gestures to CVR:
 | Rock'n'Roll | 5 | 6 |
 | Gun | 6 | 3 |
 | Thumbs Up | 7 | 2 |
+
+### Trigger weight
+
+VRC has two parameters `GestureLeftWeight` and `GestureRightWeight`. They do not exist in CVR and instead check `GestureLeft` amount where 0.5 is 50% of the trigger for the fist animation.
 
 ## Avatar-specific notes
 

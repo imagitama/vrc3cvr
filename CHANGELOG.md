@@ -1,3 +1,8 @@
+# 0.0.11
+
+- changed time parameter and blend trees to use `GestureLeft`/`GestureRight` instead of `GestureLeftWeight`/`GestureRightWeight`
+- fixed crash when no blink blendshapes
+
 # 0.0.10
 
 - output if the left or right toe bones are not set

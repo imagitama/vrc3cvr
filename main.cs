@@ -427,8 +427,6 @@ public class VRC_Chillout_Converter : EditorWindow
             }
         }
 
-
-
         return finalParams.ToArray();
     }
 
@@ -584,8 +582,27 @@ public class VRC_Chillout_Converter : EditorWindow
         {
             // Debug.Log(stateMachine.states[s].state.transitions.Length + " transitions");
 
-            AnimatorStateTransition[] newTransitions = ProcessTransitions(stateMachine.states[s].state.transitions);
-            stateMachine.states[s].state.transitions = newTransitions;
+            AnimatorState state = stateMachine.states[s].state;
+
+            // assuming they only ever check weight for the Fist animation
+            if (state.timeParameter == "GestureLeftWeight") {
+                state.timeParameter = "GestureLeft";
+            } else if (state.timeParameter == "GestureRightWeight") {
+                state.timeParameter = "GestureRight";
+            }
+
+            if (state.motion is BlendTree) {
+                BlendTree blendTree = (BlendTree)state.motion;
+
+                if (blendTree.blendParameter == "GestureLeftWeight") {
+                    blendTree.blendParameter = "GestureLeft";
+                } else if (blendTree.blendParameter == "GestureRightWeight") {
+                    blendTree.blendParameter = "GestureRight";
+                }
+            }
+
+            AnimatorStateTransition[] newTransitions = ProcessTransitions(state.transitions);
+            state.transitions = newTransitions;
         }
 
         ProcessTransitions(stateMachine.anyStateTransitions);
@@ -823,12 +840,18 @@ public class VRC_Chillout_Converter : EditorWindow
 
         Debug.Log("Visemes: " + string.Join(", ", vrcVisemeBlendShapes));
 
-        int blinkBlendshapeIdx = vrcAvatarDescriptor.customEyeLookSettings.eyelidsBlendshapes[0];
-        Mesh mesh = bodySkinnedMeshRenderer.sharedMesh;
+        int[] eyelidsBlendshapes = vrcAvatarDescriptor.customEyeLookSettings.eyelidsBlendshapes;
+        
+        if (eyelidsBlendshapes.Length >= 1 && eyelidsBlendshapes[0] != -1) {
+            int blinkBlendshapeIdx = eyelidsBlendshapes[0];
+            Mesh mesh = bodySkinnedMeshRenderer.sharedMesh;
 
-        blinkBlendshapeName = mesh.GetBlendShapeName(blinkBlendshapeIdx);
+            blinkBlendshapeName = mesh.GetBlendShapeName(blinkBlendshapeIdx);
 
-        Debug.Log("Blink blendshape: " + blinkBlendshapeName);
+            Debug.Log("Blink blendshape: " + blinkBlendshapeName);
+        } else {
+            Debug.Log("No blink blendshape set, ignoring...");
+        }
 
         VRCAvatarDescriptor.CustomAnimLayer[] vrcCustomAnimLayers = vrcAvatarDescriptor.baseAnimationLayers;
         vrcAnimatorControllers = new AnimatorController[vrcCustomAnimLayers.Length];
@@ -853,8 +876,12 @@ public class VRC_Chillout_Converter : EditorWindow
 
         Debug.Log("Setting blinking...");
 
-        cvrAvatar.useBlinkBlendshapes = true;
-        cvrAvatar.blinkBlendshape[0] = blinkBlendshapeName;
+        if (string.IsNullOrEmpty(blinkBlendshapeName) == false) {
+            cvrAvatar.useBlinkBlendshapes = true;
+            cvrAvatar.blinkBlendshape[0] = blinkBlendshapeName;
+        } else {
+            Debug.Log("Cannot set blink: no blendshapes found");
+        }
 
         Debug.Log("Setting visemes...");
 
