@@ -256,6 +256,10 @@ public class VRC_Chillout_Converter : EditorWindow
 
         Debug.Log("Found " + results.Count + " int options: " + string.Join(", ", results.ToArray()));
 
+        if (results.Count == 0) {
+            Debug.Log("Found 0 int options for param " + paramName + " - this is probably not what you want!");
+        }
+
         return results;
     }
 
@@ -305,7 +309,7 @@ public class VRC_Chillout_Converter : EditorWindow
                             }
                         };
                     } else {
-                        Debug.Log("Param only has 1 option so we are making a toggle instead");
+                        Debug.Log("Param has less than 2 options so we are making a toggle instead");
 
                         newParam = new CVRAdvancedSettingsEntry() {
                             name = vrcParam.name,

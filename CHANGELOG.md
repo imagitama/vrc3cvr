@@ -1,3 +1,7 @@
+# 0.0.12
+
+- added extra logging for github issue #8
+
 # 0.0.11
 
 - changed time parameter and blend trees to use `GestureLeft`/`GestureRight` instead of `GestureLeftWeight`/`GestureRightWeight`
