@@ -285,7 +285,7 @@ public class VRC_Chillout_Converter : EditorWindow
 
         List<CVRAdvancedSettingsEntry> newParams = new List<CVRAdvancedSettingsEntry>();
 
-        for (int i = 0; i < vrcParams.parameters.Length; i++)
+        for (int i = 0; i < vrcParams?.parameters?.Length; i++)
         {
             VRCExpressionParameter vrcParam = vrcParams.parameters[i];
 
