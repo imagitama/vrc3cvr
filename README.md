@@ -1,3 +1,5 @@
+**Disclaimer: This tool has not been updated in a year. It may work for you but it probably will not. It will not be updated by me unless I play more ChilloutVR (which is unlikely).**
+
 Convert a VRChat SDK3 avatar to ChilloutVR with this Unity script.
 
 Tested with:
