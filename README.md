@@ -28,6 +28,10 @@ Go to [Releases](https://github.com/imagitama/vrc3cvr/releases/latest) and expan
 4. Select the VRC avatar you want to convert
 5. Click Convert
 
+Want to convert your PhysBones to DynamicBones? Use this tool: https://booth.pm/ja/items/4032295
+
+You don't need to buy DynamicBones! Use this instead: https://github.com/Markcreator/VRChat-Tools
+
 ## What does it do?
 
 - adds a ChilloutVR avatar component (if missing)
