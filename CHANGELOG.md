@@ -1,3 +1,7 @@
+# 1.0.1
+
+- ignore no visemes detected
+
 # 1.0.0
 
 - renamed to "vrc3cvr" to match github repo

@@ -843,7 +843,7 @@ public class VRC3CVR : EditorWindow
 
         if (vrcVisemeBlendShapes.Length == 0)
         {
-            throw new Exception("Found 0 blend shapes from VRC component!");
+            Debug.Warning("Found 0 blend shapes from VRC component!");
         }
 
         Debug.Log("Visemes: " + string.Join(", ", vrcVisemeBlendShapes));
