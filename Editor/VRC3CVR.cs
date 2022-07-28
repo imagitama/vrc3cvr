@@ -452,15 +452,12 @@ public class VRC3CVR : EditorWindow
             {
                 AnimatorCondition condition = transitions[t].conditions[c];
 
-                // Debug.Log("CHECK " + condition.parameter + " " + condition.mode + " " + condition.threshold);
-
-                // TODO: Use switch
-                if (condition.mode == AnimatorConditionMode.Equals)
+                if (condition.parameter == "GestureLeft" || condition.parameter == "GestureRight")
                 {
-                    if (condition.parameter == "GestureLeft" || condition.parameter == "GestureRight")
-                    {
-                        float chilloutGestureNumber = GetChilloutGestureNumberForVrchatGestureNumber(condition.threshold);
+                    float chilloutGestureNumber = GetChilloutGestureNumberForVrchatGestureNumber(condition.threshold);
 
+                    if (condition.mode == AnimatorConditionMode.Equals)
+                    {
                         AnimatorCondition newConditionLessThan = new AnimatorCondition();
                         newConditionLessThan.parameter = condition.parameter;
                         newConditionLessThan.mode = AnimatorConditionMode.Less;
@@ -474,102 +471,17 @@ public class VRC3CVR : EditorWindow
                         newConditionGreaterThan.threshold = (float)(chilloutGestureNumber - 0.1);
 
                         conditionsToAdd.Add(newConditionGreaterThan);
-                    } else {
-                        AnimatorCondition newConditionLessThan = new AnimatorCondition();
-                        newConditionLessThan.parameter = condition.parameter;
-                        newConditionLessThan.mode = AnimatorConditionMode.Less;
-                        newConditionLessThan.threshold = (float)(condition.threshold + 0.1);
-
-                        conditionsToAdd.Add(newConditionLessThan);
-
-                        AnimatorCondition newConditionGreaterThan = new AnimatorCondition();
-                        newConditionGreaterThan.parameter = condition.parameter;
-                        newConditionGreaterThan.mode = AnimatorConditionMode.Greater;
-                        newConditionGreaterThan.threshold = (float)(condition.threshold - 0.1);
-
-                        conditionsToAdd.Add(newConditionGreaterThan);
-                    }
-                }
-                else if (condition.mode == AnimatorConditionMode.NotEqual) {
-                    if (condition.parameter == "GestureLeft" || condition.parameter == "GestureRight")
+                    } else if (condition.mode == AnimatorConditionMode.NotEqual)
                     {
-                        float chilloutGestureNumber = GetChilloutGestureNumberForVrchatGestureNumber(condition.threshold);
-
                         AnimatorCondition newConditionLessThan = new AnimatorCondition();
                         newConditionLessThan.parameter = condition.parameter;
                         newConditionLessThan.mode = AnimatorConditionMode.Less;
                         newConditionLessThan.threshold = (float)(chilloutGestureNumber - 0.1);
 
                         conditionsToAdd.Add(newConditionLessThan);
-                    } else {
-                        AnimatorCondition newConditionLessThan = new AnimatorCondition();
-                        newConditionLessThan.parameter = condition.parameter;
-                        newConditionLessThan.mode = AnimatorConditionMode.Less;
-                        newConditionLessThan.threshold = (float)(condition.threshold - 0.1);
-                        
-                        conditionsToAdd.Add(newConditionLessThan);
-
-                        AnimatorStateTransition newTransition = AnimatorStateTransition.Instantiate(transitions[t]);
-                        newTransition.conditions = new AnimatorCondition[] {
-                            new AnimatorCondition() {
-                                parameter = condition.parameter,
-                                mode = AnimatorConditionMode.Greater,
-                                threshold = (float)(condition.threshold + 0.1)
-                            }
-                        };
-
-                        transitionsToAdd.Add(newTransition);
                     }
-                }
-                else if (condition.mode == AnimatorConditionMode.If)
-                {
-                    AnimatorCondition newConditionLessThan = new AnimatorCondition();
-                    newConditionLessThan.parameter = condition.parameter;
-                    newConditionLessThan.mode = AnimatorConditionMode.Less;
-                    newConditionLessThan.threshold = (float)1.1;
-
-                    conditionsToAdd.Add(newConditionLessThan);
-
-                    AnimatorCondition newConditionGreaterThan = new AnimatorCondition();
-                    newConditionGreaterThan.parameter = condition.parameter;
-                    newConditionGreaterThan.mode = AnimatorConditionMode.Greater;
-                    newConditionGreaterThan.threshold = (float)0.5;
-
-                    conditionsToAdd.Add(newConditionGreaterThan);
-                }
-                else if (condition.mode == AnimatorConditionMode.IfNot)
-                {
-                    AnimatorCondition newConditionLessThan = new AnimatorCondition();
-                    newConditionLessThan.parameter = condition.parameter;
-                    newConditionLessThan.mode = AnimatorConditionMode.Less;
-                    newConditionLessThan.threshold = (float)0.49;
-
-                    conditionsToAdd.Add(newConditionLessThan);
-
-                    AnimatorCondition newConditionGreaterThan = new AnimatorCondition();
-                    newConditionGreaterThan.parameter = condition.parameter;
-                    newConditionGreaterThan.mode = AnimatorConditionMode.Greater;
-                    newConditionGreaterThan.threshold = (float)-0.1;
-
-                    conditionsToAdd.Add(newConditionGreaterThan);
-                } 
-                else if (condition.mode == AnimatorConditionMode.Greater)
-                {
-                    AnimatorCondition newCondition = new AnimatorCondition();
-                    newCondition.parameter = condition.parameter;
-                    newCondition.mode = AnimatorConditionMode.Greater;
-                    newCondition.threshold = condition.threshold;
-
-                    conditionsToAdd.Add(newCondition);
-                } 
-                else if (condition.mode == AnimatorConditionMode.Less)
-                {
-                    AnimatorCondition newCondition = new AnimatorCondition();
-                    newCondition.parameter = condition.parameter;
-                    newCondition.mode = AnimatorConditionMode.Less;
-                    newCondition.threshold = condition.threshold;
-
-                    conditionsToAdd.Add(newCondition);
+                } else {
+                    conditionsToAdd.Add(condition);
                 }
             }
 
