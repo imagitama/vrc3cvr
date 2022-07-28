@@ -1,4 +1,4 @@
-**The latest version (1.0.0) of this tool has been tested in Unity but NOT in-game as the ChilloutVR servers are currently down.**
+**The latest version of this tool has been tested in Unity but NOT in-game as the ChilloutVR servers are currently down.**
 
 Convert a VRChat SDK3 avatar to ChilloutVR with this Unity script.
 
@@ -28,7 +28,7 @@ Go to [Releases](https://github.com/imagitama/vrc3cvr/releases/latest) and expan
 4. Select the VRC avatar you want to convert
 5. Click Convert
 
-Want to convert your PhysBones to DynamicBones? Use these tools: 
+Want to convert your PhysBones to DynamicBones? Use these tools:
 
 - https://booth.pm/ja/items/4032295
 - https://github.com/Dreadrith/PhysBone-Converter

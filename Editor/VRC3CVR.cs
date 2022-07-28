@@ -680,10 +680,6 @@ public class VRC3CVR : EditorWindow
 
         Debug.Log("Found " + newParams.Length + " parameters in this animator");
 
-        for (int p = 0; p < newParams.Length; p++) {
-            newParams[p].type = AnimatorControllerParameterType.Float;
-        }
-
         chilloutAnimatorController.parameters = GetParametersWithoutDupes(newParams, existingParams);
 
         AnimatorControllerLayer[] existingLayers = chilloutAnimatorController.layers;

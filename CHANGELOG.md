@@ -1,3 +1,7 @@
+# 1.0.3
+
+- do not override parameter type to float
+
 # 1.0.2
 
 - fix crashes
