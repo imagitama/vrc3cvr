@@ -843,7 +843,7 @@ public class VRC3CVR : EditorWindow
 
         if (vrcVisemeBlendShapes.Length == 0)
         {
-            Debug.Warning("Found 0 blend shapes from VRC component!");
+            Debug.Log("Found 0 blend shapes from VRC component!");
         }
 
         Debug.Log("Visemes: " + string.Join(", ", vrcVisemeBlendShapes));
@@ -853,10 +853,13 @@ public class VRC3CVR : EditorWindow
         if (eyelidsBlendshapes.Length >= 1 && eyelidsBlendshapes[0] != -1) {
             int blinkBlendshapeIdx = eyelidsBlendshapes[0];
             Mesh mesh = bodySkinnedMeshRenderer.sharedMesh;
-
-            blinkBlendshapeName = mesh.GetBlendShapeName(blinkBlendshapeIdx);
-
-            Debug.Log("Blink blendshape: " + blinkBlendshapeName);
+            
+            if (blinkBlendshapeIdx > mesh.blendShapeCount) {
+                Debug.Log("Could not use eyelid blendshape at index " + blinkBlendshapeIdx.ToString() + ": does not exist in mesh!");
+            } else {
+                blinkBlendshapeName = mesh.GetBlendShapeName(blinkBlendshapeIdx);
+                Debug.Log("Blink blendshape: " + blinkBlendshapeName);
+            }
         } else {
             Debug.Log("No blink blendshape set, ignoring...");
         }

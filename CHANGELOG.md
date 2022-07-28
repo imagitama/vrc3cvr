@@ -1,3 +1,7 @@
+# 1.0.2
+
+- fix crashes
+
 # 1.0.1
 
 - ignore no visemes detected
