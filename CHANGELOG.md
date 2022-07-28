@@ -1,3 +1,12 @@
+# 1.0.0
+
+- renamed to "vrc3cvr" to match github repo
+- updated with latest VRCSDK and CCK
+- improved UI
+- fixed null reference error ([issue 9](https://github.com/imagitama/vrc3cvr/issues/9))
+- clones original avatar to preserve
+- added message about converting PhysBones
+
 # 0.0.12
 
 - added extra logging for github issue #8

@@ -1,17 +1,18 @@
-**Disclaimer: This tool has not been updated in a year. It has been reported to still mostly work as of July 2022. It will not be updated by me unless I play more ChilloutVR (which is unlikely).**
-
 Convert a VRChat SDK3 avatar to ChilloutVR with this Unity script.
 
 Tested with:
-- VRChat Avatar SDK3 2021.02.23
-- ChilloutVR CCK 2.3
-- Unity 2019.4.13f1
 
-Tested using avatar [Canis Woof by Rezillo Ryker](https://www.vrcarena.com/assets/fnADyoq3IE5b4zIZGanA):
+- VRChat Avatar SDK3 2022.06.03.00.04
+- ChilloutVR CCK 3.3
+- Unity 2019.4.31f1
+
+Tested using avatar [Canis Woof by Rezillo Ryker](https://www.vrcarena.com/assets/fnADyoq3IE5b4zIZGanA) (CanineRez_UnityVRC_V011 from July 2022 with PhysBones):
 
 <img src="assets/screenshot_caniswoof_fat.png" />
 
 <img src="assets/screenshot_sliders.png" />
+
+## Video
 
 [Watch video](assets/recording_caniswoof.mp4?raw=true)
 
@@ -19,12 +20,11 @@ Tested using avatar [Canis Woof by Rezillo Ryker](https://www.vrcarena.com/asset
 
 Go to [Releases](https://github.com/imagitama/vrc3cvr/releases/latest) and expand "Assets" and download the `.unitypackage`.
 
-1. Copy your VRChat avatar Unity project and open it in Unity 2019
-2. Install the ChilloutVR CCK (FAQ channel in their [Discord](https://discord.gg/ABI))
-3. Import the vrc3cvr `.unitypackage`
-4. Click PeanutTools -> VRC Chillout Converter.
-5. Select the VRC avatar you want to convert.
-6. Click Convert.
+1. Install the ChilloutVR CCK (FAQ channel in their [Discord](https://discord.gg/ABI))
+2. Download and import the vrc3cvr `.unitypackage`
+3. Click PeanutTools -> VRC3CVR
+4. Select the VRC avatar you want to convert
+5. Click Convert
 
 ## What does it do?
 
@@ -45,16 +45,16 @@ Go to [Releases](https://github.com/imagitama/vrc3cvr/releases/latest) and expan
 
 Mapping of VRC gestures to CVR:
 
-| Gesture | VRC | CVR |
-| --- | --- | --- | 
-| Nothing | 0 | 0 |
-| Fist | 1 | 1 |
-| Open Hand | 2 | -1 |
-| Point | 3 | 4 |
-| Peace | 4 | 5 |
-| Rock'n'Roll | 5 | 6 |
-| Gun | 6 | 3 |
-| Thumbs Up | 7 | 2 |
+| Gesture     | VRC | CVR |
+| ----------- | --- | --- |
+| Nothing     | 0   | 0   |
+| Fist        | 1   | 1   |
+| Open Hand   | 2   | -1  |
+| Point       | 3   | 4   |
+| Peace       | 4   | 5   |
+| Rock'n'Roll | 5   | 6   |
+| Gun         | 6   | 3   |
+| Thumbs Up   | 7   | 2   |
 
 ### Trigger weight
 
@@ -85,7 +85,7 @@ Please message via the Discord if you have used the tool on your avatar.
 
 ### "VRCExpressionParameters.Parameter does not contain a definition for defaultValue" or another VRChat error
 
-Update to a more recent version. Tested with VRChat Avatar SDK3 2021.02.23.
+Update to a more recent version. Tested with at least VRChat Avatar SDK3 2021.02.23.
 
 ### When performing a gesture my hands do not animate
 

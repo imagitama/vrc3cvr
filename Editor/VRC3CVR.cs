@@ -1,4 +1,3 @@
-#if UNITY_EDITOR
 using System;
 using System.IO;
 using System.Reflection;
@@ -13,8 +12,9 @@ using VRC.SDK3.Avatars.Components;
 using ABI.CCK.Components;
 using ABI.CCK.Scripts;
 using ABI.CCK.Scripts.Editor;
+using PeanutTools_VRC3CVR;
 
-public class VRC_Chillout_Converter : EditorWindow
+public class VRC3CVR : EditorWindow
 {
     Animator animator;
     bool isConverting = false;
@@ -26,85 +26,82 @@ public class VRC_Chillout_Converter : EditorWindow
     string blinkBlendshapeName;
     AnimatorController chilloutAnimatorController;
     AnimatorController[] vrcAnimatorControllers;
-    string outputDirName = "VRC_Chillout_Converter_Output";
-    bool shouldDeleteVrcComponents = true;
+    string outputDirName = "VRC3CVR_Output";
     bool shouldDeleteCvrHandLayers = true;
+    Vector2 scrollPosition;
+    GameObject chilloutAvatarGameObject;
 
-    [MenuItem("PeanutTools/VRC Chillout Converter _%#T")]
+    [MenuItem("PeanutTools/VRC3CVR")]
     public static void ShowWindow()
     {
-        var window = GetWindow<VRC_Chillout_Converter>();
-        window.titleContent = new GUIContent("VRC Chillout Converter");
+        var window = GetWindow<VRC3CVR>();
+        window.titleContent = new GUIContent("VRC3CVR");
         window.minSize = new Vector2(250, 50);
     }
 
     void OnGUI()
     {
-        EditorGUILayout.Space();
-        EditorGUILayout.Space();
+        scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
 
-        GUILayout.Label("Select your VRChat avatar and click Convert to convert it to ChilloutVR", EditorStyles.wordWrappedLabel);
+        CustomGUI.BoldLabel("VRC3CVR");
+        CustomGUI.ItalicLabel("Convert your VRChat avatar to ChilloutVR");
 
-        EditorGUILayout.Space();
-        EditorGUILayout.Space();
+        CustomGUI.LineGap();
 
-        GUILayout.Label("Please ensure you are in a new scene or Unity project to avoid deleting your VRChat components", EditorStyles.wordWrappedLabel);
+        CustomGUI.HorizontalRule();
+        
+        CustomGUI.LineGap();
 
-        EditorGUILayout.Space();
-        EditorGUILayout.Space();
+        CustomGUI.BoldLabel("Step 1: Select your avatar");
+
+        CustomGUI.SmallLineGap();
 
         vrcAvatarDescriptor = (VRCAvatarDescriptor)EditorGUILayout.ObjectField("Avatar", vrcAvatarDescriptor, typeof(VRCAvatarDescriptor));
         
-        EditorGUILayout.Space();
-        EditorGUILayout.Space();
+        CustomGUI.SmallLineGap();
+        
+        CustomGUI.BoldLabel("Step 2: Configure settings");
 
-        shouldDeleteVrcComponents = GUILayout.Toggle(shouldDeleteVrcComponents, "Delete VRChat components after");
-
-        EditorGUILayout.Space();
-        EditorGUILayout.Space();
+        CustomGUI.SmallLineGap();
 
         shouldDeleteCvrHandLayers = GUILayout.Toggle(shouldDeleteCvrHandLayers, "My avatar has custom hand animations");
+        CustomGUI.ItalicLabel("If your avatar overwrites the default finger animations when performing expressions");
 
-        EditorGUILayout.Space();
-        EditorGUILayout.Space();
+        CustomGUI.SmallLineGap();
 
-        if (GUILayout.Button("Convert") && GetIsReadyForConvert())
+        GUILayout.Label("Need to convert your PhysBones to DynamicBones? Use this tool: https://booth.pm/ja/items/4032295");
+
+        CustomGUI.SmallLineGap();
+        
+        CustomGUI.BoldLabel("Step 3: Convert");
+        
+        CustomGUI.SmallLineGap();
+
+        EditorGUI.BeginDisabledGroup(GetIsReadyForConvert() == false);
+        if (GUILayout.Button("Convert"))
         {
             Convert();
         }
+        EditorGUI.EndDisabledGroup();
+        CustomGUI.ItalicLabel("Clones your original avatar to preserve it");
 
-        EditorGUILayout.Space();
-        EditorGUILayout.Space();
-
-        GUILayout.Label("VRChat does not require your imported rig to have toe bones but CVR does. Are yours set:", EditorStyles.wordWrappedLabel);
-
-        if (animator == null) {
-            GUILayout.Label("Perform conversion to check");
-        } else {
+        if (animator != null) {
             Transform leftToesTransform = animator.GetBoneTransform(HumanBodyBones.LeftToes);
             Transform righToesTransform = animator.GetBoneTransform(HumanBodyBones.RightToes);
 
-            GUILayout.Label("Left: " + (leftToesTransform == null ? "NOT SET" : "Set"));
-            GUILayout.Label("Right: " + (righToesTransform == null ? "NOT SET" : "Set"));
+            if (leftToesTransform == null || righToesTransform == null) {
+                CustomGUI.SmallLineGap();
+
+                CustomGUI.RenderErrorMessage("You do not have a " + (leftToesTransform == null ? "left" : "right") + " toe bone configured");
+                CustomGUI.RenderWarningMessage("You must configure this before you upload your avatar");
+            }
         }
 
-        EditorGUILayout.Space();
-        EditorGUILayout.Space();
-        EditorGUILayout.Space();
-        EditorGUILayout.Space();
+        CustomGUI.SmallLineGap();
 
-        GUILayout.Label("Join my Discord: https://discord.gg/sm6EBWJH6B");
+        CustomGUI.MyLinks("vrc3cvr");
 
-        EditorGUILayout.Space();
-        EditorGUILayout.Space();
-
-        GUILayout.Label("Download new versions: https://github.com/imagitama/vrc3cvr");
-
-        EditorGUILayout.Space();
-        EditorGUILayout.Space();
-
-        GUILayout.Label("https://twitter.com/@HiPeanutBuddha");
-        GUILayout.Label("Peanut#1756");
+        EditorGUILayout.EndScrollView();
     }
 
     bool GetAreToeBonesSet() {
@@ -119,8 +116,18 @@ public class VRC_Chillout_Converter : EditorWindow
     void SetAnimator() {
         // this is not necessary for VRC or CVR but it helps people test their controller
         // and lets us query for Toe bones for our GUI
-        animator = vrcAvatarDescriptor.gameObject.GetComponent<Animator>();
+        animator = chilloutAvatarGameObject.GetComponent<Animator>();
         animator.runtimeAnimatorController = chilloutAnimatorController;
+    }
+
+    void CreateChilloutAvatar() {
+        chilloutAvatarGameObject = Instantiate(vrcAvatarDescriptor.gameObject);
+        chilloutAvatarGameObject.name = vrcAvatarDescriptor.gameObject.name + " (ChilloutVR)";
+        chilloutAvatarGameObject.SetActive(true);
+    }
+    
+    void HideOriginalAvatar() {
+        vrcAvatarDescriptor.gameObject.SetActive(false);
     }
 
     void Convert()
@@ -134,6 +141,7 @@ public class VRC_Chillout_Converter : EditorWindow
 
         Debug.Log("Starting to convert...");
 
+        CreateChilloutAvatar();
         GetValuesFromVrcAvatar();
         CreateChilloutComponentIfNeeded();
         PopulateChilloutComponent();
@@ -142,11 +150,8 @@ public class VRC_Chillout_Converter : EditorWindow
         SetAnimator();
         ConvertVrcParametersToChillout();
         InsertChilloutOverride();
-
-        if (shouldDeleteVrcComponents)
-        {
-            DeleteVrcComponents();
-        }
+        DeleteVrcComponents();
+        HideOriginalAvatar();
 
         Debug.Log("Conversion complete!");
 
@@ -198,15 +203,14 @@ public class VRC_Chillout_Converter : EditorWindow
     {
         Debug.Log("Deleting vrc components...");
 
-        VRC.Core.PipelineManager pipelineManager = vrcAvatarDescriptor.gameObject.GetComponent<VRC.Core.PipelineManager>();
+        VRC.Core.PipelineManager pipelineManager = chilloutAvatarGameObject.GetComponent<VRC.Core.PipelineManager>();
 
-        if (pipelineManager == null)
+        if (pipelineManager != null)
         {
-            throw new Exception("Cannot delete pipeline manager: cannot find it!");
+            DestroyImmediate(pipelineManager);
         }
 
-        DestroyImmediate(vrcAvatarDescriptor);
-        DestroyImmediate(pipelineManager);
+        DestroyImmediate(chilloutAvatarGameObject.GetComponent<VRCAvatarDescriptor>());
 
         Debug.Log("Vrc components deleted");
     }
@@ -918,7 +922,7 @@ public class VRC_Chillout_Converter : EditorWindow
 
     void CreateChilloutComponentIfNeeded()
     {
-        cvrAvatar = vrcAvatarDescriptor.gameObject.GetComponent<CVRAvatar>();
+        cvrAvatar = chilloutAvatarGameObject.GetComponent<CVRAvatar>();
 
         if (cvrAvatar != null)
         {
@@ -928,12 +932,10 @@ public class VRC_Chillout_Converter : EditorWindow
 
         Debug.Log("Avatar does not have a CVRAvatar, adding...");
 
-        cvrAvatar = vrcAvatarDescriptor.gameObject.AddComponent<CVRAvatar>() as CVRAvatar;
+        cvrAvatar = chilloutAvatarGameObject.AddComponent<CVRAvatar>() as CVRAvatar;
 
         Debug.Log("CVRAvatar component added");
 
         Repaint();
     }
 }
-
-#endif
