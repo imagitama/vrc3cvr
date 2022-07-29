@@ -25,7 +25,7 @@ Go to [Releases](https://github.com/imagitama/vrc3cvr/releases/latest) and expan
 1. Install the ChilloutVR CCK (FAQ channel in their [Discord](https://discord.gg/ABI))
 2. Download and import the vrc3cvr `.unitypackage`
 3. Click PeanutTools -> VRC3CVR
-4. Select the VRC avatar you want to convert
+4. Select the VRC avatar you want to convert (ensure you have the VRC SDK in the project)
 5. Click Convert
 
 Want to convert your PhysBones to DynamicBones? Use these tools:
@@ -99,3 +99,7 @@ Update to a more recent version. Tested with at least VRChat Avatar SDK3 2021.02
 ### When performing a gesture my hands do not animate
 
 Uncheck "My avatar has custom hand animations" and convert.
+
+### "The type or namespace 'VRC' could not be found"
+
+You need the VRC SDK in your project.
