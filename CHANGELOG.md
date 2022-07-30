@@ -1,3 +1,10 @@
+# 1.1.0
+
+- properly delete all VRC components
+- fixed converting avatars without a skinned mesh renderer
+- properly log warnings
+- added clone toggle
+
 # 1.0.3
 
 - do not override parameter type to float

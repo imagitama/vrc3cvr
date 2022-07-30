@@ -47,7 +47,6 @@ You don't need to buy DynamicBones! Use this instead: https://github.com/Markcre
   - toggle for all boolean params
   - dropdown for all int params (toggle if only 1 int found)
 - converts each animator controller (gestures, FX, etc.) to support ChilloutVR's gesture system
-  - ChilloutVR only supports float parameters so booleans and ints have been converted
   - references to `GestureLeftWeight`/`GestureRightWeight` are converted to `GestureLeft`/`GestureRight` (check your Fist animation!)
 
 ## Mapping gestures

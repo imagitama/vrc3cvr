@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Reflection;
+using System.Linq;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
@@ -30,6 +31,8 @@ public class VRC3CVR : EditorWindow
     bool shouldDeleteCvrHandLayers = true;
     Vector2 scrollPosition;
     GameObject chilloutAvatarGameObject;
+    bool shouldCloneAvatar = true;
+    bool shouldDeletePhysBones = true;
 
     [MenuItem("PeanutTools/VRC3CVR")]
     public static void ShowWindow()
@@ -70,6 +73,15 @@ public class VRC3CVR : EditorWindow
         CustomGUI.SmallLineGap();
 
         GUILayout.Label("Need to convert your PhysBones to DynamicBones? Use this tool: https://booth.pm/ja/items/4032295");
+
+        CustomGUI.SmallLineGap();
+
+        shouldCloneAvatar = GUILayout.Toggle(shouldCloneAvatar, "Clone avatar");
+
+        CustomGUI.SmallLineGap();
+
+        shouldDeletePhysBones = GUILayout.Toggle(shouldDeletePhysBones, "Delete PhysBones and colliders");
+        CustomGUI.ItalicLabel("Always deletes contact receivers and senders");
 
         CustomGUI.SmallLineGap();
         
@@ -121,9 +133,13 @@ public class VRC3CVR : EditorWindow
     }
 
     void CreateChilloutAvatar() {
-        chilloutAvatarGameObject = Instantiate(vrcAvatarDescriptor.gameObject);
-        chilloutAvatarGameObject.name = vrcAvatarDescriptor.gameObject.name + " (ChilloutVR)";
-        chilloutAvatarGameObject.SetActive(true);
+        if (shouldCloneAvatar) {
+            chilloutAvatarGameObject = Instantiate(vrcAvatarDescriptor.gameObject);
+            chilloutAvatarGameObject.name = vrcAvatarDescriptor.gameObject.name + " (ChilloutVR)";
+            chilloutAvatarGameObject.SetActive(true);
+        } else {
+            chilloutAvatarGameObject = vrcAvatarDescriptor.gameObject;
+        }
     }
     
     void HideOriginalAvatar() {
@@ -151,7 +167,10 @@ public class VRC3CVR : EditorWindow
         ConvertVrcParametersToChillout();
         InsertChilloutOverride();
         DeleteVrcComponents();
-        HideOriginalAvatar();
+
+        if (shouldCloneAvatar) {
+            HideOriginalAvatar();
+        }
 
         Debug.Log("Conversion complete!");
 
@@ -201,18 +220,29 @@ public class VRC3CVR : EditorWindow
 
     void DeleteVrcComponents()
     {
-        Debug.Log("Deleting vrc components...");
+        Debug.Log("Deleting VRC components...");
+        
+        DestroyImmediate(chilloutAvatarGameObject.GetComponent(typeof(VRC.Core.PipelineManager)));
 
-        VRC.Core.PipelineManager pipelineManager = chilloutAvatarGameObject.GetComponent<VRC.Core.PipelineManager>();
+        var vrcComponents = chilloutAvatarGameObject.GetComponentsInChildren(typeof(Component), true).ToList().Where(c => c.GetType().Name.StartsWith("VRC")).ToList();
 
-        if (pipelineManager != null)
-        {
-            DestroyImmediate(pipelineManager);
+        if (vrcComponents.Count > 0) {
+            Debug.Log("Found " + vrcComponents.Count + " VRC components");
+
+            foreach (var component in vrcComponents) {
+                string componentName = component.GetType().Name;
+                
+                if (!shouldDeletePhysBones && componentName.Contains("PhysBone")) {
+                    continue;
+                }
+                
+                Debug.Log(component.name + "." + componentName);
+
+                DestroyImmediate(component);
+            }
         }
 
-        DestroyImmediate(chilloutAvatarGameObject.GetComponent<VRCAvatarDescriptor>());
-
-        Debug.Log("Vrc components deleted");
+        Debug.Log("VRC components deleted");
     }
 
     List<int> GetAllIntOptionsForParamFromAnimatorController(string paramName, AnimatorController animatorController) {
@@ -724,17 +754,15 @@ public class VRC3CVR : EditorWindow
 
         bodySkinnedMeshRenderer = vrcAvatarDescriptor.VisemeSkinnedMesh;
 
-        if (bodySkinnedMeshRenderer == null)
-        {
-            throw new Exception("Could not find viseme skinned mesh from VRC component!");
+        if (bodySkinnedMeshRenderer == null) {
+            Debug.LogWarning("Could not find viseme skinned mesh from VRC component");
+        } else {
+            Debug.Log("Body skinned mesh renderer: " + bodySkinnedMeshRenderer);
         }
-
-        Debug.Log("Body skinned mesh renderer: " + bodySkinnedMeshRenderer);
 
         vrcViewPosition = vrcAvatarDescriptor.ViewPosition;
 
-        if (vrcViewPosition == null)
-        {
+        if (vrcViewPosition == null){
             throw new Exception("Could not find view position from VRC component!");
         }
 
@@ -742,34 +770,34 @@ public class VRC3CVR : EditorWindow
 
         vrcVisemeBlendShapes = vrcAvatarDescriptor.VisemeBlendShapes;
 
-        if (vrcViewPosition == null)
-        {
-            throw new Exception("Could not find viseme blend shapes from VRC component!");
+        if (vrcViewPosition == null) {
+            Debug.LogWarning("Could not find viseme blend shapes from VRC component");
+        } else {
+            if (vrcVisemeBlendShapes.Length == 0) {
+                Debug.LogWarning("Found 0 viseme blend shapes from VRC component");
+            } else {
+                Debug.Log("Visemes: " + string.Join(", ", vrcVisemeBlendShapes));
+            }
         }
-
-        Debug.Log("Found number of visemes: " + vrcVisemeBlendShapes.Length);
-
-        if (vrcVisemeBlendShapes.Length == 0)
-        {
-            Debug.Log("Found 0 blend shapes from VRC component!");
-        }
-
-        Debug.Log("Visemes: " + string.Join(", ", vrcVisemeBlendShapes));
 
         int[] eyelidsBlendshapes = vrcAvatarDescriptor.customEyeLookSettings.eyelidsBlendshapes;
         
         if (eyelidsBlendshapes.Length >= 1 && eyelidsBlendshapes[0] != -1) {
-            int blinkBlendshapeIdx = eyelidsBlendshapes[0];
-            Mesh mesh = bodySkinnedMeshRenderer.sharedMesh;
-            
-            if (blinkBlendshapeIdx > mesh.blendShapeCount) {
-                Debug.Log("Could not use eyelid blendshape at index " + blinkBlendshapeIdx.ToString() + ": does not exist in mesh!");
+            if (bodySkinnedMeshRenderer != null) {
+                int blinkBlendshapeIdx = eyelidsBlendshapes[0];
+                Mesh mesh = bodySkinnedMeshRenderer.sharedMesh;
+                
+                if (blinkBlendshapeIdx > mesh.blendShapeCount) {
+                    Debug.LogWarning("Could not use eyelid blendshape at index " + blinkBlendshapeIdx.ToString() + ": does not exist in mesh!");
+                } else {
+                    blinkBlendshapeName = mesh.GetBlendShapeName(blinkBlendshapeIdx);
+                    Debug.Log("Blink blendshape: " + blinkBlendshapeName);
+                }
             } else {
-                blinkBlendshapeName = mesh.GetBlendShapeName(blinkBlendshapeIdx);
-                Debug.Log("Blink blendshape: " + blinkBlendshapeName);
+                Debug.LogWarning("Eyelid blendshapes are set but no skinned mesh renderer found");
             }
         } else {
-            Debug.Log("No blink blendshape set, ignoring...");
+            Debug.Log("No blink blendshape set");
         }
 
         VRCAvatarDescriptor.CustomAnimLayer[] vrcCustomAnimLayers = vrcAvatarDescriptor.baseAnimationLayers;
@@ -781,17 +809,19 @@ public class VRC3CVR : EditorWindow
         }
 
         Debug.Log("Found number of vrc base animation layers: " + vrcAvatarDescriptor.baseAnimationLayers.Length);
-
-        Debug.Log("Gotten all values from VRC avatar component");
     }
 
     void PopulateChilloutComponent()
     {
         Debug.Log("Populating chillout avatar component...");
 
-        Debug.Log("Setting face mesh...");
+        if (bodySkinnedMeshRenderer != null) {
+            Debug.Log("Setting face mesh...");
 
-        cvrAvatar.bodyMesh = bodySkinnedMeshRenderer;
+            cvrAvatar.bodyMesh = bodySkinnedMeshRenderer;
+        } else {
+            Debug.Log("No body skinned mesh renderer found so not setting CVR body mesh");
+        }
 
         Debug.Log("Setting blinking...");
 
@@ -799,7 +829,7 @@ public class VRC3CVR : EditorWindow
             cvrAvatar.useBlinkBlendshapes = true;
             cvrAvatar.blinkBlendshape[0] = blinkBlendshapeName;
         } else {
-            Debug.Log("Cannot set blink: no blendshapes found");
+            Debug.LogWarning("Cannot set blink: no blendshapes found");
         }
 
         Debug.Log("Setting visemes...");
