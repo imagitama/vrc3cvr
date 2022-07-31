@@ -811,6 +811,42 @@ public class VRC3CVR : EditorWindow
         Debug.Log("Found number of vrc base animation layers: " + vrcAvatarDescriptor.baseAnimationLayers.Length);
     }
 
+    SkinnedMeshRenderer GetSkinnedMeshRendererInCVRAvatar() {
+        string pathToSkinnedMeshRenderer = GetPathToGameObjectInsideAvatar(bodySkinnedMeshRenderer.gameObject);
+
+        Debug.Log("Path to body skinned mesh renderer: " + pathToSkinnedMeshRenderer);
+        
+        var match = cvrAvatar.transform.Find(pathToSkinnedMeshRenderer.Remove(0, 1));
+
+        if (match == null) {
+            Debug.LogWarning("Could not find body inside the CVR avatar");
+            return null;
+        }
+
+        SkinnedMeshRenderer skinnedMeshRenderer = match.GetComponent<SkinnedMeshRenderer>();
+
+        if (skinnedMeshRenderer == null) {
+            Debug.LogWarning("Could not find body skinned mesh renderer inside the CVR avatar");
+            return null;
+        }
+
+        return skinnedMeshRenderer;
+    } 
+
+    public static string GetPathToGameObjectInsideAvatar(GameObject obj)
+    {
+        string path = "/" + obj.name;
+        while (obj.transform.parent != null)
+        {
+            obj = obj.transform.parent.gameObject;
+
+            if (obj.transform.parent != null) {
+                path = "/" + obj.name + path;
+            }
+        }
+        return path;
+    }
+
     void PopulateChilloutComponent()
     {
         Debug.Log("Populating chillout avatar component...");
@@ -818,7 +854,7 @@ public class VRC3CVR : EditorWindow
         if (bodySkinnedMeshRenderer != null) {
             Debug.Log("Setting face mesh...");
 
-            cvrAvatar.bodyMesh = bodySkinnedMeshRenderer;
+            cvrAvatar.bodyMesh = GetSkinnedMeshRendererInCVRAvatar();
         } else {
             Debug.Log("No body skinned mesh renderer found so not setting CVR body mesh");
         }

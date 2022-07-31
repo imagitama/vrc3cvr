@@ -1,3 +1,7 @@
+# 1.1.1
+
+- fix face mesh using the old mesh
+
 # 1.1.0
 
 - properly delete all VRC components
