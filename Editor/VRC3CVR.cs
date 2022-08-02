@@ -52,7 +52,7 @@ public class VRC3CVR : EditorWindow
         CustomGUI.LineGap();
 
         CustomGUI.HorizontalRule();
-        
+
         CustomGUI.LineGap();
 
         CustomGUI.BoldLabel("Step 1: Select your avatar");
@@ -60,9 +60,9 @@ public class VRC3CVR : EditorWindow
         CustomGUI.SmallLineGap();
 
         vrcAvatarDescriptor = (VRCAvatarDescriptor)EditorGUILayout.ObjectField("Avatar", vrcAvatarDescriptor, typeof(VRCAvatarDescriptor));
-        
+
         CustomGUI.SmallLineGap();
-        
+
         CustomGUI.BoldLabel("Step 2: Configure settings");
 
         CustomGUI.SmallLineGap();
@@ -84,9 +84,9 @@ public class VRC3CVR : EditorWindow
         CustomGUI.ItalicLabel("Always deletes contact receivers and senders");
 
         CustomGUI.SmallLineGap();
-        
+
         CustomGUI.BoldLabel("Step 3: Convert");
-        
+
         CustomGUI.SmallLineGap();
 
         EditorGUI.BeginDisabledGroup(GetIsReadyForConvert() == false);
@@ -141,7 +141,7 @@ public class VRC3CVR : EditorWindow
             chilloutAvatarGameObject = vrcAvatarDescriptor.gameObject;
         }
     }
-    
+
     void HideOriginalAvatar() {
         vrcAvatarDescriptor.gameObject.SetActive(false);
     }
@@ -221,7 +221,7 @@ public class VRC3CVR : EditorWindow
     void DeleteVrcComponents()
     {
         Debug.Log("Deleting VRC components...");
-        
+
         DestroyImmediate(chilloutAvatarGameObject.GetComponent(typeof(VRC.Core.PipelineManager)));
 
         var vrcComponents = chilloutAvatarGameObject.GetComponentsInChildren(typeof(Component), true).ToList().Where(c => c.GetType().Name.StartsWith("VRC")).ToList();
@@ -231,11 +231,11 @@ public class VRC3CVR : EditorWindow
 
             foreach (var component in vrcComponents) {
                 string componentName = component.GetType().Name;
-                
+
                 if (!shouldDeletePhysBones && componentName.Contains("PhysBone")) {
                     continue;
                 }
-                
+
                 Debug.Log(component.name + "." + componentName);
 
                 DestroyImmediate(component);
@@ -468,6 +468,64 @@ public class VRC3CVR : EditorWindow
         return finalParams.ToArray();
     }
 
+    AnimatorTransition[] ProcessTransitions(AnimatorTransition[] transitions)
+    {
+        List<AnimatorTransition> transitionsToAdd = new List<AnimatorTransition>();
+
+        for (int t = 0; t < transitions.Length; t++)
+        {
+            List<AnimatorCondition> conditionsToAdd = new List<AnimatorCondition>();
+
+            // Debug.Log(transitions[t].conditions.Length + " conditions");
+
+            for (int c = 0; c < transitions[t].conditions.Length; c++)
+            {
+                AnimatorCondition condition = transitions[t].conditions[c];
+
+                if (condition.parameter == "GestureLeft" || condition.parameter == "GestureRight")
+                {
+                    float chilloutGestureNumber = GetChilloutGestureNumberForVrchatGestureNumber(condition.threshold);
+
+                    if (condition.mode == AnimatorConditionMode.Equals)
+                    {
+                        AnimatorCondition newConditionLessThan = new AnimatorCondition();
+                        newConditionLessThan.parameter = condition.parameter;
+                        newConditionLessThan.mode = AnimatorConditionMode.Less;
+                        newConditionLessThan.threshold = (float)(chilloutGestureNumber + 0.1);
+
+                        conditionsToAdd.Add(newConditionLessThan);
+
+                        AnimatorCondition newConditionGreaterThan = new AnimatorCondition();
+                        newConditionGreaterThan.parameter = condition.parameter;
+                        newConditionGreaterThan.mode = AnimatorConditionMode.Greater;
+                        newConditionGreaterThan.threshold = (float)(chilloutGestureNumber - 0.1);
+
+                        conditionsToAdd.Add(newConditionGreaterThan);
+                    } else if (condition.mode == AnimatorConditionMode.NotEqual)
+                    {
+                        AnimatorCondition newConditionLessThan = new AnimatorCondition();
+                        newConditionLessThan.parameter = condition.parameter;
+                        newConditionLessThan.mode = AnimatorConditionMode.Less;
+                        newConditionLessThan.threshold = (float)(chilloutGestureNumber - 0.1);
+
+                        conditionsToAdd.Add(newConditionLessThan);
+                    }
+                } else {
+                    conditionsToAdd.Add(condition);
+                }
+            }
+
+            transitions[t].conditions = conditionsToAdd.ToArray();
+        }
+
+        AnimatorTransition[] newTransitions = new AnimatorTransition[transitions.Length + transitionsToAdd.Count];
+
+        transitions.CopyTo(newTransitions, 0);
+        transitionsToAdd.ToArray().CopyTo(newTransitions, transitions.Length);
+
+        return newTransitions;
+    }
+
     AnimatorStateTransition[] ProcessTransitions(AnimatorStateTransition[] transitions)
     {
         List<AnimatorStateTransition> transitionsToAdd = new List<AnimatorStateTransition>();
@@ -556,6 +614,7 @@ public class VRC3CVR : EditorWindow
         }
 
         ProcessTransitions(stateMachine.anyStateTransitions);
+        ProcessTransitions(stateMachine.entryTransitions);
 
         if (stateMachine.stateMachines.Length > 0)
         {
@@ -721,7 +780,7 @@ public class VRC3CVR : EditorWindow
         List<AnimatorControllerLayer> newLayers = new List<AnimatorControllerLayer>();
 
         string[] allowedLayerNames;
-            
+
         if (shouldDeleteCvrHandLayers) {
             Debug.Log("Deleting CVR hand layers...");
             allowedLayerNames = new string[] { "Locomotion/Emotes" };
@@ -781,12 +840,12 @@ public class VRC3CVR : EditorWindow
         }
 
         int[] eyelidsBlendshapes = vrcAvatarDescriptor.customEyeLookSettings.eyelidsBlendshapes;
-        
+
         if (eyelidsBlendshapes.Length >= 1 && eyelidsBlendshapes[0] != -1) {
             if (bodySkinnedMeshRenderer != null) {
                 int blinkBlendshapeIdx = eyelidsBlendshapes[0];
                 Mesh mesh = bodySkinnedMeshRenderer.sharedMesh;
-                
+
                 if (blinkBlendshapeIdx > mesh.blendShapeCount) {
                     Debug.LogWarning("Could not use eyelid blendshape at index " + blinkBlendshapeIdx.ToString() + ": does not exist in mesh!");
                 } else {
@@ -815,7 +874,7 @@ public class VRC3CVR : EditorWindow
         string pathToSkinnedMeshRenderer = GetPathToGameObjectInsideAvatar(bodySkinnedMeshRenderer.gameObject);
 
         Debug.Log("Path to body skinned mesh renderer: " + pathToSkinnedMeshRenderer);
-        
+
         var match = cvrAvatar.transform.Find(pathToSkinnedMeshRenderer.Remove(0, 1));
 
         if (match == null) {
@@ -831,7 +890,7 @@ public class VRC3CVR : EditorWindow
         }
 
         return skinnedMeshRenderer;
-    } 
+    }
 
     public static string GetPathToGameObjectInsideAvatar(GameObject obj)
     {
