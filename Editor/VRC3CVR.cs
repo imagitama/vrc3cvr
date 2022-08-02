@@ -650,22 +650,27 @@ public class VRC3CVR : EditorWindow
 
         for (int i = 0; i < existingLayers.Length; i++)
         {
-            newLayers[newLayersIdx] = existingLayers[i];
-            newLayersIdx++;
+            if (existingLayers[i].stateMachine.states.Length > 0) { // Do not copy empty layers
+                newLayers[newLayersIdx] = existingLayers[i];
+                newLayersIdx++;
+            }
         }
 
         for (int i = 0; i < layersToMerge.Length; i++)
         {
             AnimatorControllerLayer layer = layersToMerge[i];
 
-            Debug.Log("Layer \"" + layer.name + "\" with " + layer.stateMachine.states.Length + " states");
+            if (layer.stateMachine.states.Length > 0) { // Do not copy empty layers
+                Debug.Log("Layer \"" + layer.name + "\" with " + layer.stateMachine.states.Length + " states");
 
-            ProcessStateMachine(layer.stateMachine);
+                ProcessStateMachine(layer.stateMachine);
 
-            newLayers[newLayersIdx] = layer;
-            newLayersIdx++;
+                newLayers[newLayersIdx] = layer;
+                newLayersIdx++;
+            }
         }
 
+        Array.Resize(ref newLayers, newLayersIdx);
         chilloutAnimatorController.layers = newLayers;
 
         Debug.Log("Merged");
