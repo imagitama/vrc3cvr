@@ -505,6 +505,8 @@ public class VRC3CVR : EditorWindow
                         // Look for GestureWeight and adjust threshold
                         if (chilloutGestureNumber == 1f) // Fist only
                         {
+                            thresholdLow = 0.01f;
+
                             for (int w = 0; w < transitions[t].conditions.Length; w++)
                             {
                                 AnimatorCondition conditionW = transitions[t].conditions[w];
