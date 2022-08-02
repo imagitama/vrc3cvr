@@ -488,6 +488,7 @@ public class VRC3CVR : EditorWindow
 
             // Debug.Log(transitions[t].conditions.Length + " conditions");
 
+            // Convert GestureLeft/GestureRight to ChilloutVR
             for (int c = 0; c < transitions[t].conditions.Length; c++)
             {
                 AnimatorCondition condition = transitions[t].conditions[c];
@@ -498,17 +499,43 @@ public class VRC3CVR : EditorWindow
 
                     if (condition.mode == AnimatorConditionMode.Equals)
                     {
+                        float thresholdLow = (float)(chilloutGestureNumber - 0.1);
+                        float thresholdHigh = (float)(chilloutGestureNumber + 0.1);
+
+                        // Look for GestureWeight and adjust threshold
+                        if (chilloutGestureNumber == 1f) // Fist only
+                        {
+                            for (int w = 0; w < transitions[t].conditions.Length; w++)
+                            {
+                                AnimatorCondition conditionW = transitions[t].conditions[w];
+                                if (
+                                    (condition.parameter == "GestureLeft" && conditionW.parameter == "GestureLeftWeight") ||
+                                    (condition.parameter == "GestureRight" && conditionW.parameter == "GestureRightWeight")
+                                ) {
+                                    if (conditionW.mode == AnimatorConditionMode.Less)
+                                    {
+                                        thresholdHigh = conditionW.threshold;
+                                    }
+                                    else
+                                    {
+                                        thresholdLow = conditionW.threshold;
+                                    }
+                                }
+                            }
+                        }
+
+                        // Create replace conditions for ChilloutVR
                         AnimatorCondition newConditionLessThan = new AnimatorCondition();
                         newConditionLessThan.parameter = condition.parameter;
                         newConditionLessThan.mode = AnimatorConditionMode.Less;
-                        newConditionLessThan.threshold = (float)(chilloutGestureNumber + 0.1);
+                        newConditionLessThan.threshold = thresholdHigh;
 
                         conditionsToAdd.Add(newConditionLessThan);
 
                         AnimatorCondition newConditionGreaterThan = new AnimatorCondition();
                         newConditionGreaterThan.parameter = condition.parameter;
                         newConditionGreaterThan.mode = AnimatorConditionMode.Greater;
-                        newConditionGreaterThan.threshold = (float)(chilloutGestureNumber - 0.1);
+                        newConditionGreaterThan.threshold = thresholdLow;
 
                         conditionsToAdd.Add(newConditionGreaterThan);
                     } else if (condition.mode == AnimatorConditionMode.NotEqual)
@@ -520,7 +547,59 @@ public class VRC3CVR : EditorWindow
 
                         conditionsToAdd.Add(newConditionLessThan);
                     }
-                } else {
+                }
+                else if (condition.parameter == "GestureLeftWeight" || condition.parameter == "GestureRightWeight")
+                {
+                    // Look for fist gesture and create condition if needed
+                    bool gestureFound = false;
+
+                    for (int w = 0; w < transitions[t].conditions.Length; w++)
+                    {
+                        AnimatorCondition conditionW = transitions[t].conditions[w];
+                        if (
+                            (condition.parameter == "GestureLeftWeight" && conditionW.parameter == "GestureLeft") ||
+                            (condition.parameter == "GestureRightWeight" && conditionW.parameter == "GestureRight")
+                        ) {
+                            if (conditionW.threshold == 1f) {
+                                gestureFound = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    // Create condition if gesture weight is used by itself
+                    if (!gestureFound)
+                    {
+                        float thresholdLow = -0.1f;
+                        float thresholdHigh = 1.1f;
+
+                        if (condition.mode == AnimatorConditionMode.Less)
+                        {
+                            thresholdHigh = condition.threshold;
+                        }
+                        else
+                        {
+                            thresholdLow = condition.threshold;
+                        }
+
+                        // Create replace conditions for ChilloutVR
+                        AnimatorCondition newConditionLessThan = new AnimatorCondition();
+                        newConditionLessThan.parameter = condition.parameter;
+                        newConditionLessThan.mode = AnimatorConditionMode.Less;
+                        newConditionLessThan.threshold = thresholdHigh;
+
+                        conditionsToAdd.Add(newConditionLessThan);
+
+                        AnimatorCondition newConditionGreaterThan = new AnimatorCondition();
+                        newConditionGreaterThan.parameter = condition.parameter;
+                        newConditionGreaterThan.mode = AnimatorConditionMode.Greater;
+                        newConditionGreaterThan.threshold = thresholdLow;
+
+                        conditionsToAdd.Add(newConditionGreaterThan);
+                    }
+                }
+                else
+                {
                     conditionsToAdd.Add(condition);
                 }
             }
