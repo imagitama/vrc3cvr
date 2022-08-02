@@ -470,65 +470,17 @@ public class VRC3CVR : EditorWindow
 
     AnimatorTransition[] ProcessTransitions(AnimatorTransition[] transitions)
     {
-        List<AnimatorTransition> transitionsToAdd = new List<AnimatorTransition>();
-
-        for (int t = 0; t < transitions.Length; t++)
-        {
-            List<AnimatorCondition> conditionsToAdd = new List<AnimatorCondition>();
-
-            // Debug.Log(transitions[t].conditions.Length + " conditions");
-
-            for (int c = 0; c < transitions[t].conditions.Length; c++)
-            {
-                AnimatorCondition condition = transitions[t].conditions[c];
-
-                if (condition.parameter == "GestureLeft" || condition.parameter == "GestureRight")
-                {
-                    float chilloutGestureNumber = GetChilloutGestureNumberForVrchatGestureNumber(condition.threshold);
-
-                    if (condition.mode == AnimatorConditionMode.Equals)
-                    {
-                        AnimatorCondition newConditionLessThan = new AnimatorCondition();
-                        newConditionLessThan.parameter = condition.parameter;
-                        newConditionLessThan.mode = AnimatorConditionMode.Less;
-                        newConditionLessThan.threshold = (float)(chilloutGestureNumber + 0.1);
-
-                        conditionsToAdd.Add(newConditionLessThan);
-
-                        AnimatorCondition newConditionGreaterThan = new AnimatorCondition();
-                        newConditionGreaterThan.parameter = condition.parameter;
-                        newConditionGreaterThan.mode = AnimatorConditionMode.Greater;
-                        newConditionGreaterThan.threshold = (float)(chilloutGestureNumber - 0.1);
-
-                        conditionsToAdd.Add(newConditionGreaterThan);
-                    } else if (condition.mode == AnimatorConditionMode.NotEqual)
-                    {
-                        AnimatorCondition newConditionLessThan = new AnimatorCondition();
-                        newConditionLessThan.parameter = condition.parameter;
-                        newConditionLessThan.mode = AnimatorConditionMode.Less;
-                        newConditionLessThan.threshold = (float)(chilloutGestureNumber - 0.1);
-
-                        conditionsToAdd.Add(newConditionLessThan);
-                    }
-                } else {
-                    conditionsToAdd.Add(condition);
-                }
-            }
-
-            transitions[t].conditions = conditionsToAdd.ToArray();
-        }
-
-        AnimatorTransition[] newTransitions = new AnimatorTransition[transitions.Length + transitionsToAdd.Count];
-
-        transitions.CopyTo(newTransitions, 0);
-        transitionsToAdd.ToArray().CopyTo(newTransitions, transitions.Length);
-
-        return newTransitions;
+        return ProcessTransitions<AnimatorTransition>(transitions);
     }
 
     AnimatorStateTransition[] ProcessTransitions(AnimatorStateTransition[] transitions)
     {
-        List<AnimatorStateTransition> transitionsToAdd = new List<AnimatorStateTransition>();
+        return ProcessTransitions<AnimatorStateTransition>(transitions);
+    }
+
+    AnimatorTranstitionType[] ProcessTransitions<AnimatorTranstitionType>(AnimatorTranstitionType[] transitions) where AnimatorTranstitionType : AnimatorTransitionBase
+    {
+        List<AnimatorTranstitionType> transitionsToAdd = new List<AnimatorTranstitionType>();
 
         for (int t = 0; t < transitions.Length; t++)
         {
@@ -576,7 +528,7 @@ public class VRC3CVR : EditorWindow
             transitions[t].conditions = conditionsToAdd.ToArray();
         }
 
-        AnimatorStateTransition[] newTransitions = new AnimatorStateTransition[transitions.Length + transitionsToAdd.Count];
+        AnimatorTranstitionType[] newTransitions = new AnimatorTranstitionType[transitions.Length + transitionsToAdd.Count];
 
         transitions.CopyTo(newTransitions, 0);
         transitionsToAdd.ToArray().CopyTo(newTransitions, transitions.Length);
