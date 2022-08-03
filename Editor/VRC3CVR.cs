@@ -478,135 +478,18 @@ public class VRC3CVR : EditorWindow
         return ProcessTransitions<AnimatorStateTransition>(transitions);
     }
 
-    AnimatorTranstitionType[] ProcessTransitions<AnimatorTranstitionType>(AnimatorTranstitionType[] transitions) where AnimatorTranstitionType : AnimatorTransitionBase
+    AnimatorTranstitionType[] ProcessTransitions<AnimatorTranstitionType>(AnimatorTranstitionType[] transitions) where AnimatorTranstitionType : AnimatorTransitionBase, new()
     {
         List<AnimatorTranstitionType> transitionsToAdd = new List<AnimatorTranstitionType>();
 
         for (int t = 0; t < transitions.Length; t++)
         {
             List<AnimatorCondition> conditionsToAdd = new List<AnimatorCondition>();
+            AnimatorTranstitionType transition = transitions[t];
 
             // Debug.Log(transitions[t].conditions.Length + " conditions");
 
-            // Convert GestureLeft/GestureRight to ChilloutVR
-            for (int c = 0; c < transitions[t].conditions.Length; c++)
-            {
-                AnimatorCondition condition = transitions[t].conditions[c];
-
-                if (condition.parameter == "GestureLeft" || condition.parameter == "GestureRight")
-                {
-                    float chilloutGestureNumber = GetChilloutGestureNumberForVrchatGestureNumber(condition.threshold);
-
-                    if (condition.mode == AnimatorConditionMode.Equals)
-                    {
-                        float thresholdLow = (float)(chilloutGestureNumber - 0.1);
-                        float thresholdHigh = (float)(chilloutGestureNumber + 0.1);
-
-                        // Look for GestureWeight and adjust threshold
-                        if (chilloutGestureNumber == 1f) // Fist only
-                        {
-                            thresholdLow = 0.01f;
-
-                            for (int w = 0; w < transitions[t].conditions.Length; w++)
-                            {
-                                AnimatorCondition conditionW = transitions[t].conditions[w];
-                                if (
-                                    (condition.parameter == "GestureLeft" && conditionW.parameter == "GestureLeftWeight") ||
-                                    (condition.parameter == "GestureRight" && conditionW.parameter == "GestureRightWeight")
-                                ) {
-                                    if (conditionW.mode == AnimatorConditionMode.Less)
-                                    {
-                                        thresholdHigh = conditionW.threshold;
-                                    }
-                                    else
-                                    {
-                                        thresholdLow = conditionW.threshold;
-                                    }
-                                }
-                            }
-                        }
-
-                        // Create replace conditions for ChilloutVR
-                        AnimatorCondition newConditionLessThan = new AnimatorCondition();
-                        newConditionLessThan.parameter = condition.parameter;
-                        newConditionLessThan.mode = AnimatorConditionMode.Less;
-                        newConditionLessThan.threshold = thresholdHigh;
-
-                        conditionsToAdd.Add(newConditionLessThan);
-
-                        AnimatorCondition newConditionGreaterThan = new AnimatorCondition();
-                        newConditionGreaterThan.parameter = condition.parameter;
-                        newConditionGreaterThan.mode = AnimatorConditionMode.Greater;
-                        newConditionGreaterThan.threshold = thresholdLow;
-
-                        conditionsToAdd.Add(newConditionGreaterThan);
-                    } else if (condition.mode == AnimatorConditionMode.NotEqual)
-                    {
-                        AnimatorCondition newConditionLessThan = new AnimatorCondition();
-                        newConditionLessThan.parameter = condition.parameter;
-                        newConditionLessThan.mode = AnimatorConditionMode.Less;
-                        newConditionLessThan.threshold = (float)(chilloutGestureNumber - 0.1);
-
-                        conditionsToAdd.Add(newConditionLessThan);
-                    }
-                }
-                else if (condition.parameter == "GestureLeftWeight" || condition.parameter == "GestureRightWeight")
-                {
-                    // Look for fist gesture and create condition if needed
-                    bool gestureFound = false;
-
-                    for (int w = 0; w < transitions[t].conditions.Length; w++)
-                    {
-                        AnimatorCondition conditionW = transitions[t].conditions[w];
-                        if (
-                            (condition.parameter == "GestureLeftWeight" && conditionW.parameter == "GestureLeft") ||
-                            (condition.parameter == "GestureRightWeight" && conditionW.parameter == "GestureRight")
-                        ) {
-                            if (conditionW.threshold == 1f) {
-                                gestureFound = true;
-                                break;
-                            }
-                        }
-                    }
-
-                    // Create condition if gesture weight is used by itself
-                    if (!gestureFound)
-                    {
-                        float thresholdLow = -0.1f;
-                        float thresholdHigh = 1.1f;
-
-                        if (condition.mode == AnimatorConditionMode.Less)
-                        {
-                            thresholdHigh = condition.threshold;
-                        }
-                        else
-                        {
-                            thresholdLow = condition.threshold;
-                        }
-
-                        // Create replace conditions for ChilloutVR
-                        AnimatorCondition newConditionLessThan = new AnimatorCondition();
-                        newConditionLessThan.parameter = condition.parameter;
-                        newConditionLessThan.mode = AnimatorConditionMode.Less;
-                        newConditionLessThan.threshold = thresholdHigh;
-
-                        conditionsToAdd.Add(newConditionLessThan);
-
-                        AnimatorCondition newConditionGreaterThan = new AnimatorCondition();
-                        newConditionGreaterThan.parameter = condition.parameter;
-                        newConditionGreaterThan.mode = AnimatorConditionMode.Greater;
-                        newConditionGreaterThan.threshold = thresholdLow;
-
-                        conditionsToAdd.Add(newConditionGreaterThan);
-                    }
-                }
-                else
-                {
-                    conditionsToAdd.Add(condition);
-                }
-            }
-
-            transitions[t].conditions = conditionsToAdd.ToArray();
+            ProcessTransition(transition, transitionsToAdd, conditionsToAdd);
         }
 
         AnimatorTranstitionType[] newTransitions = new AnimatorTranstitionType[transitions.Length + transitionsToAdd.Count];
@@ -615,6 +498,188 @@ public class VRC3CVR : EditorWindow
         transitionsToAdd.ToArray().CopyTo(newTransitions, transitions.Length);
 
         return newTransitions;
+    }
+
+    void ProcessTransition<AnimatorTranstitionType>(AnimatorTranstitionType transition, List<AnimatorTranstitionType> transitionsToAdd, List<AnimatorCondition> conditionsToAdd, bool isDuplicate = false) where AnimatorTranstitionType : AnimatorTransitionBase, new()
+    {
+        // Convert GestureLeft/GestureRight to ChilloutVR
+        for (int c = 0; c < transition.conditions.Length; c++)
+        {
+            AnimatorCondition condition = transition.conditions[c];
+
+            if (condition.parameter == "GestureLeft" || condition.parameter == "GestureRight")
+            {
+                float chilloutGestureNumber = GetChilloutGestureNumberForVrchatGestureNumber(condition.threshold);
+
+                if (condition.mode == AnimatorConditionMode.Equals)
+                {
+                    float thresholdLow = (float)(chilloutGestureNumber - 0.1);
+                    float thresholdHigh = (float)(chilloutGestureNumber + 0.1);
+
+                    // Look for GestureWeight and adjust threshold
+                    if (chilloutGestureNumber == 1f) // Fist only
+                    {
+                        thresholdLow = 0.01f;
+
+                        for (int w = 0; w < transition.conditions.Length; w++)
+                        {
+                            AnimatorCondition conditionW = transition.conditions[w];
+                            if (
+                                (condition.parameter == "GestureLeft" && conditionW.parameter == "GestureLeftWeight") ||
+                                (condition.parameter == "GestureRight" && conditionW.parameter == "GestureRightWeight")
+                            ) {
+                                if (conditionW.mode == AnimatorConditionMode.Less)
+                                {
+                                    thresholdHigh = conditionW.threshold;
+                                }
+                                else
+                                {
+                                    thresholdLow = conditionW.threshold;
+                                }
+                            }
+                        }
+                    }
+
+                    // Create replace conditions for ChilloutVR
+                    AnimatorCondition newConditionLessThan = new AnimatorCondition();
+                    newConditionLessThan.parameter = condition.parameter;
+                    newConditionLessThan.mode = AnimatorConditionMode.Less;
+                    newConditionLessThan.threshold = thresholdHigh;
+
+                    conditionsToAdd.Add(newConditionLessThan);
+
+                    AnimatorCondition newConditionGreaterThan = new AnimatorCondition();
+                    newConditionGreaterThan.parameter = condition.parameter;
+                    newConditionGreaterThan.mode = AnimatorConditionMode.Greater;
+                    newConditionGreaterThan.threshold = thresholdLow;
+
+                    conditionsToAdd.Add(newConditionGreaterThan);
+                }
+                else if (condition.mode == AnimatorConditionMode.NotEqual)
+                {
+                    float thresholdLow = (float)(chilloutGestureNumber - 0.1);
+                    float thresholdHigh = (float)(chilloutGestureNumber + 0.1);
+
+                    if (chilloutGestureNumber == 1f) // Fist only
+                    {
+                        thresholdLow = 0.01f;
+                    }
+
+                    if (isDuplicate) {
+                        // Add greater than transition to duplicate
+                        AnimatorCondition newConditionGreaterThan = new AnimatorCondition();
+                        newConditionGreaterThan.parameter = condition.parameter;
+                        newConditionGreaterThan.mode = AnimatorConditionMode.Greater;
+                        newConditionGreaterThan.threshold = thresholdHigh;
+
+                        conditionsToAdd.Add(newConditionGreaterThan);
+
+                    } else {
+                        // Change transition to use less than
+                        AnimatorCondition newConditionLessThan = new AnimatorCondition();
+                        newConditionLessThan.parameter = condition.parameter;
+                        newConditionLessThan.mode = AnimatorConditionMode.Less;
+                        newConditionLessThan.threshold = thresholdLow;
+
+                        conditionsToAdd.Add(newConditionLessThan);
+
+                        // Duplicate transition to create the "or greater than" transition
+                        AnimatorTranstitionType newTransition = new AnimatorTranstitionType();
+                        if (newTransition is AnimatorStateTransition) {
+                            AnimatorStateTransition newTransitionTyped = newTransition as AnimatorStateTransition;
+                            AnimatorStateTransition transitionTyped = transition as AnimatorStateTransition;
+                            newTransitionTyped.duration = transitionTyped.duration;
+                            newTransitionTyped.canTransitionToSelf = transitionTyped.canTransitionToSelf;
+                            newTransitionTyped.exitTime = transitionTyped.exitTime;
+                            newTransitionTyped.hasExitTime = transitionTyped.hasExitTime;
+                            newTransitionTyped.hasFixedDuration = transitionTyped.hasFixedDuration;
+                            newTransitionTyped.interruptionSource = transitionTyped.interruptionSource;
+                            newTransitionTyped.offset = transitionTyped.offset;
+                            newTransitionTyped.orderedInterruption = transitionTyped.orderedInterruption;
+                        }
+
+                        newTransition.name = transition.name;
+                        newTransition.destinationState = transition.destinationState;
+                        newTransition.destinationStateMachine = transition.destinationStateMachine;
+                        newTransition.hideFlags = transition.hideFlags;
+                        newTransition.isExit = transition.isExit;
+                        newTransition.solo = transition.solo;
+                        newTransition.mute = transition.mute;
+
+                        for (int c2 = 0; c2 < transition.conditions.Length; c2++)
+                        {
+                            newTransition.AddCondition(transition.conditions[c2].mode, transition.conditions[c2].threshold, transition.conditions[c2].parameter);
+                        }
+
+                        List<AnimatorTranstitionType> transitionsToAdd2 = new List<AnimatorTranstitionType>();
+                        List<AnimatorCondition> conditionsToAdd2 = new List<AnimatorCondition>();
+
+                        ProcessTransition(newTransition, transitionsToAdd2, conditionsToAdd2, true);
+                        newTransition.conditions = conditionsToAdd2.ToArray();
+
+                        transitionsToAdd.Add(newTransition);
+                    }
+                }
+            }
+            else if (condition.parameter == "GestureLeftWeight" || condition.parameter == "GestureRightWeight")
+            {
+                // Look for fist gesture and create condition if needed
+                bool gestureFound = false;
+
+                for (int w = 0; w < transition.conditions.Length; w++)
+                {
+                    AnimatorCondition conditionW = transition.conditions[w];
+                    if (
+                        (condition.parameter == "GestureLeftWeight" && conditionW.parameter == "GestureLeft") ||
+                        (condition.parameter == "GestureRightWeight" && conditionW.parameter == "GestureRight")
+                    ) {
+                        if (conditionW.threshold == 1f) {
+                            gestureFound = true;
+                            break;
+                        }
+                    }
+                }
+
+                // Create condition if gesture weight is used by itself
+                if (!gestureFound)
+                {
+                    float thresholdLow = -0.1f;
+                    float thresholdHigh = 1.1f;
+
+                    if (condition.mode == AnimatorConditionMode.Less)
+                    {
+                        thresholdHigh = condition.threshold;
+                    }
+                    else
+                    {
+                        thresholdLow = condition.threshold;
+                    }
+
+                    string parameterName = condition.parameter == "GestureLeftWeight" ? "GestureLeft" : "GestureRight";
+
+                    // Create replace conditions for ChilloutVR
+                    AnimatorCondition newConditionLessThan = new AnimatorCondition();
+                    newConditionLessThan.parameter = parameterName;
+                    newConditionLessThan.mode = AnimatorConditionMode.Less;
+                    newConditionLessThan.threshold = thresholdHigh;
+
+                    conditionsToAdd.Add(newConditionLessThan);
+
+                    AnimatorCondition newConditionGreaterThan = new AnimatorCondition();
+                    newConditionGreaterThan.parameter = parameterName;
+                    newConditionGreaterThan.mode = AnimatorConditionMode.Greater;
+                    newConditionGreaterThan.threshold = thresholdLow;
+
+                    conditionsToAdd.Add(newConditionGreaterThan);
+                }
+            }
+            else
+            {
+                conditionsToAdd.Add(condition);
+            }
+        }
+
+        transition.conditions = conditionsToAdd.ToArray();
     }
 
     void ProcessStateMachine(AnimatorStateMachine stateMachine)
@@ -646,8 +711,8 @@ public class VRC3CVR : EditorWindow
             state.transitions = newTransitions;
         }
 
-        ProcessTransitions(stateMachine.anyStateTransitions);
-        ProcessTransitions(stateMachine.entryTransitions);
+        stateMachine.anyStateTransitions = ProcessTransitions(stateMachine.anyStateTransitions);
+        stateMachine.entryTransitions = ProcessTransitions(stateMachine.entryTransitions);
 
         if (stateMachine.stateMachines.Length > 0)
         {
