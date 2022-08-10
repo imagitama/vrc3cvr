@@ -1,5 +1,7 @@
 **This tool is in "low maintenance" mode. I will not be making many updates to it (I don't play ChilloutVR much). I welcome any PR.**
 
+Alternative tool: https://fluffs.gumroad.com/l/sdk3-to-cck
+
 Convert a VRChat SDK3 avatar to ChilloutVR with this Unity script.
 
 Tested with:
