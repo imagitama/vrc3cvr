@@ -33,6 +33,7 @@ public class VRC3CVR : EditorWindow
     GameObject chilloutAvatarGameObject;
     bool shouldCloneAvatar = true;
     bool shouldDeletePhysBones = true;
+    bool inteligentParameterNames = false;
 
     [MenuItem("PeanutTools/VRC3CVR")]
     public static void ShowWindow()
@@ -82,6 +83,10 @@ public class VRC3CVR : EditorWindow
 
         shouldDeletePhysBones = GUILayout.Toggle(shouldDeletePhysBones, "Delete PhysBones and colliders");
         CustomGUI.ItalicLabel("Always deletes contact receivers and senders");
+
+        CustomGUI.SmallLineGap();
+
+        inteligentParameterNames = GUILayout.Toggle(inteligentParameterNames, "Inteligent Parameter names");
 
         CustomGUI.SmallLineGap();
 
@@ -135,7 +140,7 @@ public class VRC3CVR : EditorWindow
     void CreateChilloutAvatar() {
         if (shouldCloneAvatar) {
             chilloutAvatarGameObject = Instantiate(vrcAvatarDescriptor.gameObject);
-            chilloutAvatarGameObject.name = vrcAvatarDescriptor.gameObject.name + " (ChilloutVR)";
+            chilloutAvatarGameObject.name = vrcAvatarDescriptor.gameObject.name.Trim() + " (ChilloutVR)";
             chilloutAvatarGameObject.SetActive(true);
         } else {
             chilloutAvatarGameObject = vrcAvatarDescriptor.gameObject;
@@ -245,14 +250,13 @@ public class VRC3CVR : EditorWindow
         Debug.Log("VRC components deleted");
     }
 
-    List<int> GetAllIntOptionsForParamFromAnimatorController(string paramName, AnimatorController animatorController) {
-        // TODO: Check special "any state" property
-
+    List<int> GetAllIntOptionsForParamFromAnimatorController(string paramName, AnimatorController animatorController)
+    {
         List<int> results = new List<int>();
 
         foreach (AnimatorControllerLayer layer in animatorController.layers) {
             foreach (ChildAnimatorState state in layer.stateMachine.states) {
-                foreach (AnimatorStateTransition transition in state.state.transitions) {
+                foreach (AnimatorStateTransition transition in state.state.transitions.Concat(layer.stateMachine.anyStateTransitions)) {
                     foreach (AnimatorCondition condition in transition.conditions) {
                         if (condition.parameter == paramName && results.Contains((int)condition.threshold) == false) {
                             Debug.Log("Adding " + condition.threshold + " as option for param " + paramName);
@@ -297,18 +301,127 @@ public class VRC3CVR : EditorWindow
         return results;
     }
 
-    List<CVRAdvancedSettingsDropDownEntry> ConvertIntToGameObjectDropdownOptions(List<int> ints) {
+    List<CVRAdvancedSettingsDropDownEntry> ConvertIntToGameObjectDropdownOptions(List<int> ints, VRCExpressionParameter param = null) {
         List<CVRAdvancedSettingsDropDownEntry> entries = new List<CVRAdvancedSettingsDropDownEntry>();
 
         ints.Sort();
 
         foreach (int value in ints) {
             entries.Add(new CVRAdvancedSettingsDropDownEntry() {
-                name = value.ToString()
+                name = param == null ? value.ToString() : ParameterValueFriendlyName(param, value)
             });
         }
 
         return entries;
+    }
+
+    VRCExpressionsMenu[] GetExpressionSubMenus(VRCExpressionsMenu m)
+    {
+        List<VRCExpressionsMenu> menus = new List<VRCExpressionsMenu>();
+        menus.Add(m);
+        foreach(VRCExpressionsMenu.Control c in m.controls)
+        {
+            if(c.type == VRCExpressionsMenu.Control.ControlType.SubMenu)
+            {
+                if(c.subMenu == null)
+                {
+                    Debug.LogWarning($"Null submenu in VRCExpressionsMenu {m.ToString()} control {c.ToString()}");
+                    continue;
+                }
+                menus.AddRange(GetExpressionSubMenus(c.subMenu));
+            }
+        }
+        return menus.ToArray();
+    }
+
+    VRCExpressionsMenu[] GetExpressionMenus()
+    {
+        VRCExpressionsMenu basemenu = vrcAvatarDescriptor.expressionsMenu;
+
+        if (basemenu == null) return new VRCExpressionsMenu[0];
+
+        return GetExpressionSubMenus(basemenu);
+    }
+    
+    bool IsControlFor(VRCExpressionsMenu.Control c, VRCExpressionParameter param)
+    {
+        switch (c.type)
+        {
+            case VRCExpressionsMenu.Control.ControlType.TwoAxisPuppet:
+            case VRCExpressionsMenu.Control.ControlType.FourAxisPuppet:
+            case VRCExpressionsMenu.Control.ControlType.RadialPuppet:
+                foreach (var subparam in c.subParameters)
+                {
+                    if (subparam.name == param.name) return true;
+                }
+                break;
+            case VRCExpressionsMenu.Control.ControlType.Button:
+            case VRCExpressionsMenu.Control.ControlType.Toggle:
+            case VRCExpressionsMenu.Control.ControlType.SubMenu:
+            default:
+                break;
+        }
+        return c.parameter.name == param.name;
+    }
+
+    string MenuFriendlyName(VRCExpressionsMenu tm)
+    {
+        foreach (VRCExpressionsMenu m in GetExpressionMenus())
+        {
+            foreach (VRCExpressionsMenu.Control c in m.controls)
+            {
+                if (c.type == VRCExpressionsMenu.Control.ControlType.SubMenu && c.subMenu == tm) return c.name;
+            }
+        }
+        return tm.name;
+    }
+
+    string ParameterFriendlyName(VRCExpressionParameter param, bool multi = false)
+    {
+        if (inteligentParameterNames)
+        {
+            // Attempts to detect a friendly name for an expression parameter, falling back to the name otherwise
+            foreach (VRCExpressionsMenu m in GetExpressionMenus())
+            {
+                foreach (VRCExpressionsMenu.Control c in m.controls)
+                {
+                    if (IsControlFor(c, param))
+                    {
+                        if (multi)
+                        {
+                            return MenuFriendlyName(m);
+                        }
+                        else
+                        {
+                            return c.name;
+                        }
+                    }
+                }
+            }
+        }
+        return param.name;
+    }
+
+    string ParameterValueFriendlyName(VRCExpressionParameter param, int value)
+    {
+        if (inteligentParameterNames)
+        {
+            // Attempts to detect a friendly name for an expression parameter value, falling back to the name otherwise
+            foreach (VRCExpressionsMenu m in GetExpressionMenus())
+            {
+                foreach (VRCExpressionsMenu.Control c in m.controls)
+                {
+                    if (IsControlFor(c, param))
+                    {
+                        if (((int)c.value) == value)
+                        {
+                            return c.name;
+                        }
+                    }
+                }
+            }
+        }
+        return value.ToString();
     }
 
     void ConvertVrcParametersToChillout()
@@ -330,14 +443,15 @@ public class VRC3CVR : EditorWindow
             switch (vrcParam.valueType)
             {
                 case VRCExpressionParameters.ValueType.Int:
-                    List<CVRAdvancedSettingsDropDownEntry> dropdownOptions = ConvertIntToGameObjectDropdownOptions(GetAllIntOptionsForParam(vrcParam.name));
+                    List<CVRAdvancedSettingsDropDownEntry> dropdownOptions = ConvertIntToGameObjectDropdownOptions(GetAllIntOptionsForParam(vrcParam.name), vrcParam);
 
                     if (dropdownOptions.Count > 1) {
                         newParam = new CVRAdvancedSettingsEntry() {
-                            name = vrcParam.name,
+                            name = ParameterFriendlyName(vrcParam, true),
                             machineName = vrcParam.name,
                             type = CVRAdvancedSettingsEntry.SettingsType.GameObjectDropdown,
                             setting = new CVRAdvancesAvatarSettingGameObjectDropdown() {
+                                usedType = CVRAdvancesAvatarSettingBase.ParameterType.GenerateInt,
                                 defaultValue = (int)vrcParam.defaultValue,
                                 options = dropdownOptions
                             }
@@ -357,10 +471,11 @@ public class VRC3CVR : EditorWindow
 
                 case VRCExpressionParameters.ValueType.Float:
                     newParam = new CVRAdvancedSettingsEntry() {
-                        name = vrcParam.name,
+                        name = ParameterFriendlyName(vrcParam),
                         machineName = vrcParam.name,
                         type = CVRAdvancedSettingsEntry.SettingsType.Slider,
                         setting = new CVRAdvancesAvatarSettingSlider() {
+                            usedType = CVRAdvancesAvatarSettingBase.ParameterType.GenerateFloat,
                             defaultValue = vrcParam.defaultValue
                         }
                     };
@@ -368,9 +483,10 @@ public class VRC3CVR : EditorWindow
 
                 case VRCExpressionParameters.ValueType.Bool:
                     newParam = new CVRAdvancedSettingsEntry() {
-                        name = vrcParam.name,
+                        name = ParameterFriendlyName(vrcParam),
                         machineName = vrcParam.name,
                         setting = new CVRAdvancesAvatarSettingGameObjectToggle() {
+                            usedType = CVRAdvancesAvatarSettingBase.ParameterType.GenerateBool,
                             defaultValue = vrcParam.defaultValue != 0 ? true : false
                         }
                     };
