@@ -35,7 +35,7 @@ Want to convert your PhysBones to DynamicBones? Use these tools:
 - https://booth.pm/ja/items/4032295
 - https://github.com/Dreadrith/PhysBone-Converter
 
-You don't need to buy DynamicBones! Use this instead: https://github.com/Markcreator/VRChat-Tools
+You don't need to buy DynamicBones! [Use this instead.](https://web.archive.org/web/20220204083651if_/https://objects.githubusercontent.com/github-production-release-asset-2e65be/412817921/ea75cc97-f679-4430-9d4e-29145b0143e0?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAIWNJYAX4CSVEH53A%2F20220204%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20220204T083509Z&X-Amz-Expires=300&X-Amz-Signature=b2b485dc8b05964635b634adadf39d9ada42f9c6843710acdd0c824dbcaf8ee8&X-Amz-SignedHeaders=host&actor_id=0&key_id=0&repo_id=412817921&response-content-disposition=attachment%3B%20filename%3DDynamic.Bone.Container.v1.3.0.unitypackage&response-content-type=application%2Foctet-stream) A free alternative to the Dynamic Bone package that can interpret bone information and works for uploading to VRChat.
 
 ## What does it do?
 
